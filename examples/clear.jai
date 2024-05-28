@@ -13,14 +13,14 @@ default_context: Context;
 pass_action: sg_pass_action;
 
 init :: () #c_call {
-    push_context default_context {
-        desc := sg_desc.{
-            environment = xx sglue_environment(),
-            logger = .{ func = slog_func },
-        };
-        sg_setup(*desc);
-        pass_action.colors[0] = .{ load_action = .CLEAR, clear_value = .{ 1.0, 0.0, 0.0, 1.0 } };
+    desc := sg_desc.{
+        environment = xx sglue_environment(),
+        logger = .{ func = slog_func },
+    };
+    sg_setup(*desc);
+    pass_action.colors[0] = .{ load_action = .CLEAR, clear_value = .{ 1.0, 0.0, 0.0, 1.0 } };
 
+    push_context default_context {
         // just some debug output what backend we're running on
         if sg_query_backend() == {
             case .D3D11; print(">> using D3D11 backend");
@@ -36,20 +36,16 @@ init :: () #c_call {
 }
 
 frame :: () #c_call {
-    push_context default_context {
-        g := pass_action.colors[0].clear_value.g + 0.01;
-        pass_action.colors[0].clear_value.g = ifx(g > 1.0) then 0.0 else g;
-        pass := sg_pass.{ action = pass_action, swapchain = xx sglue_swapchain() };
-        sg_begin_pass(*pass);
-        sg_end_pass();
-        sg_commit();
-    }
+    g := pass_action.colors[0].clear_value.g + 0.01;
+    pass_action.colors[0].clear_value.g = ifx(g > 1.0) then 0.0 else g;
+    pass := sg_pass.{ action = pass_action, swapchain = xx sglue_swapchain() };
+    sg_begin_pass(*pass);
+    sg_end_pass();
+    sg_commit();
 }
 
 cleanup :: () #c_call {
-    push_context default_context {
-        sg_shutdown();
-    }
+    sg_shutdown();
 }
 
 main :: () {
