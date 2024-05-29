@@ -4,10 +4,10 @@
 //  Hello Triangle sample.
 //------------------------------------------------------------------------------
 #import "Basic";
-#import,dir "../sokol/log";
-#import,dir "../sokol/gfx";
-#import,dir "../sokol/app";
-#import,dir "../sokol/glue";
+#import,dir "../sokol/log"(USE_GL=USE_GL);
+#import,dir "../sokol/gfx"(USE_GL=USE_GL);
+#import,dir "../sokol/app"(USE_GL=USE_GL);
+#import,dir "../sokol/glue"(USE_GL=USE_GL);
 
 default_context: Context;
 state: struct {
@@ -124,11 +124,59 @@ triangle_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
             // desc.fs.entry = "main";
         }
         case .METAL_MACOS; {
-            // FIXME:
-            // desc.vs.source = xx *vs_source_metal_macos;
-            // desc.vs.entry = "main0";
-            // desc.fs.source = xx *fs_source_metal_macos;
-            // desc.fs.entry = "main0";
+            vs_source_metal_macos :: #string VS_END
+                #include <metal_stdlib>
+                #include <simd/simd.h>
+
+                using namespace metal;
+
+                struct main0_out
+                {
+                    float4 color [[user(locn0)]];
+                    float4 gl_Position [[position]];
+                };
+
+                struct main0_in
+                {
+                    float4 position [[attribute(0)]];
+                    float4 color0 [[attribute(1)]];
+                };
+
+                vertex main0_out main0(main0_in in [[stage_in]])
+                {
+                    main0_out out = {};
+                    out.gl_Position = in.position;
+                    out.color = in.color0;
+                    return out;
+                }
+            VS_END
+            fs_source_metal_macos :: #string FS_END
+                #include <metal_stdlib>
+                #include <simd/simd.h>
+
+                using namespace metal;
+
+                struct main0_out
+                {
+                    float4 frag_color [[color(0)]];
+                };
+
+                struct main0_in
+                {
+                    float4 color [[user(locn0)]];
+                };
+
+                fragment main0_out main0(main0_in in [[stage_in]])
+                {
+                    main0_out out = {};
+                    out.frag_color = in.color;
+                    return out;
+                }
+            FS_END
+            desc.vs.source = vs_source_metal_macos;
+            desc.vs.entry = "main0";
+            desc.fs.source = fs_source_metal_macos;
+            desc.fs.entry = "main0";
         }
     }
     return desc;

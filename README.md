@@ -5,8 +5,6 @@ Auto-generated Jai bindings for the [sokol headers](https://github.com/floooh/so
 To include sokol in your project you can copy the [sokol](sokol/) directory.
 
 ## TODO:
-- Pass SOKOL_DEBUG when building or importing
-- Pass SOKOL_USE_GL when building or importing
 - Compile shaders
 - Windows support
 - Linux support
@@ -40,26 +38,26 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
 3. Build and run the samples:
     Warning: examples that are commented out aren't implemented yet.
     ```
-    jai ../examples/clear.jai && ../examples/clear
-    jai ../examples/triangle.jai && ../examples/triangle
-    # jai ../examples/quad.jai && ../examples/quad
-    # jai ../examples/bufferoffsets.jai && ../examples/bufferoffsets
-    # jai ../examples/cube.jai && ../examples/cube
-    # jai ../examples/noninterleaved.jai && ../examples/noninterleaved
-    # jai ../examples/texcube.jai && ../examples/texcube
-    # jai ../examples/shapes.jai && ../examples/shapes
-    # jai ../examples/offscreen.jai && ../examples/offscreen
-    # jai ../examples/instancing.jai && ../examples/instancing
-    # jai ../examples/mrt.jai && ../examples/mrt
-    jai ../examples/blend.jai && ../examples/blend
-    # jai ../examples/debugtext.jai && ../examples/debugtext
-    jai ../examples/debugtext-print.jai && ../examples/debugtext-print
-    # jai ../examples/debugtext-userfont && ../examples/debugtext-userfont
-    # jai ../examples/saudio.jai && ../examples/saudio
-    # jai ../examples/sgl.jai && ../examples/sgl
-    # jai ../examples/sgl-points.jai && ../examples/sgl-points
-    # jai ../examples/sgl-context.jai && ../examples/sgl-context
-    # jai ../examples/vertexpull.jai && ../examples/vertexpull
+    jai ../examples/first.jai - clear
+    jai ../examples/first.jai - triangle
+    # jai ../examples/first.jai - quad
+    # jai ../examples/first.jai - bufferoffsets
+    # jai ../examples/first.jai - cube
+    # jai ../examples/first.jai - noninterleaved
+    # jai ../examples/first.jai - texcube
+    # jai ../examples/first.jai - shapes
+    # jai ../examples/first.jai - offscreen
+    # jai ../examples/first.jai - instancing
+    # jai ../examples/first.jai - mrt
+    jai ../examples/first.jai - blend
+    # jai ../examples/first.jai - debugtext
+    jai ../examples/first.jai - debugtext-print
+    # jai ../examples/first.jai - debugtext-userfont
+    # jai ../examples/first.jai - saudio
+    # jai ../examples/first.jai - sgl
+    # jai ../examples/first.jai - sgl-points
+    # jai ../examples/first.jai - sgl-context
+    # jai ../examples/first.jai - vertexpull
     ```
 
     By default, the backend 3D API will be selected based on the target platform:
@@ -68,16 +66,15 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     - Windows: D3D11
     - Linux: GL
 
-    (TODO: support this)
-    To force the GL backend on macOS or Windows, build with ```-define:SOKOL_USE_GL=true```:
+    To force the GL backend on macOS or Windows, build with ```-GL```:
 
     ```
-    jai ../examples/clear.jai - -define:SOKOL_USE_GL=true
+    jai ../examples/first.jai - clear -GL
     ```
 
     The ```clear``` sample prints the selected backend to the terminal:
 
     ```
-    jai ../examples/clear.jai - -define:SOKOL_USE_GL=true
+    jai ../examples/first.jai - clear -GL
     >> using GL backend
     ```

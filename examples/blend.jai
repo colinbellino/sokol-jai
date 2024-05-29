@@ -5,10 +5,10 @@
 //------------------------------------------------------------------------------
 #import "Basic";
 #import "Math";
-#import,dir "../sokol/log";
-#import,dir "../sokol/gfx";
-#import,dir "../sokol/app";
-#import,dir "../sokol/glue";
+#import,dir "../sokol/log"(USE_GL=USE_GL);
+#import,dir "../sokol/gfx"(USE_GL=USE_GL);
+#import,dir "../sokol/app"(USE_GL=USE_GL);
+#import,dir "../sokol/glue"(USE_GL=USE_GL);
 
 NUM_BLEND_FACTORS :: 15;
 ATTR_vs_bg_position :: 0;
@@ -285,13 +285,60 @@ bg_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
             // desc.fs.uniform_blocks[0].size = 16;
             // desc.fs.uniform_blocks[0].layout = .STD140;
         case .METAL_MACOS;
-            // FIXME:
-            // desc.vs.source = vs_bg_source_metal_macos;
-            // desc.vs.entry = "main0";
-            // desc.fs.source = fs_bg_source_metal_macos;
-            // desc.fs.entry = "main0";
-            // desc.fs.uniform_blocks[0].size = 16;
-            // desc.fs.uniform_blocks[0].layout = .STD140;
+            fs_bg_source_metal_macos :: #string FS_END
+                #include <metal_stdlib>
+                #include <simd/simd.h>
+
+                using namespace metal;
+
+                struct bg_fs_params
+                {
+                    float tick;
+                };
+
+                struct main0_out
+                {
+                    float4 frag_color [[color(0)]];
+                };
+
+                fragment main0_out main0(constant bg_fs_params& _17 [[buffer(0)]], float4 gl_FragCoord [[position]])
+                {
+                    main0_out out = {};
+                    float2 _28 = fract((gl_FragCoord.xy - float2(_17.tick)) * float2(0.0199999995529651641845703125));
+                    float _39 = _28.x * _28.y;
+                    out.frag_color = float4(_39, _39, _39, 1.0);
+                    return out;
+                }
+            FS_END
+            vs_bg_source_metal_macos :: #string VS_END
+                #include <metal_stdlib>
+                #include <simd/simd.h>
+
+                using namespace metal;
+
+                struct main0_out
+                {
+                    float4 gl_Position [[position]];
+                };
+
+                struct main0_in
+                {
+                    float2 position [[attribute(0)]];
+                };
+
+                vertex main0_out main0(main0_in in [[stage_in]])
+                {
+                    main0_out out = {};
+                    out.gl_Position = float4(in.position, 0.5, 1.0);
+                    return out;
+                }
+            VS_END
+            desc.vs.source = vs_bg_source_metal_macos;
+            desc.vs.entry = "main0";
+            desc.fs.source = fs_bg_source_metal_macos;
+            desc.fs.entry = "main0";
+            desc.fs.uniform_blocks[0].size = 16;
+            desc.fs.uniform_blocks[0].layout = .STD140;
     }
     return desc;
 }
@@ -350,12 +397,66 @@ quad_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
             // desc.fs.d3d11_target = "ps_5_0";
             // desc.fs.entry = "main";
         case .METAL_MACOS;
-            // desc.vs.source = vs_quad_source_metal_macos;
-            // desc.vs.entry = "main0";
-            // desc.vs.uniform_blocks[0].size = 64;
-            // desc.vs.uniform_blocks[0].layout = .STD140;
-            // desc.fs.source = fs_quad_source_metal_macos;
-            // desc.fs.entry = "main0";
+            vs_quad_source_metal_macos :: #string VS_END
+                #include <metal_stdlib>
+                #include <simd/simd.h>
+
+                using namespace metal;
+
+                struct quad_vs_params
+                {
+                    float4x4 mvp;
+                };
+
+                struct main0_out
+                {
+                    float4 color [[user(locn0)]];
+                    float4 gl_Position [[position]];
+                };
+
+                struct main0_in
+                {
+                    float4 position [[attribute(0)]];
+                    float4 color0 [[attribute(1)]];
+                };
+
+                vertex main0_out main0(main0_in in [[stage_in]], constant quad_vs_params& _19 [[buffer(0)]])
+                {
+                    main0_out out = {};
+                    out.gl_Position = _19.mvp * in.position;
+                    out.color = in.color0;
+                    return out;
+                }
+            VS_END
+            fs_quad_source_metal_macos :: #string FS_END
+                #include <metal_stdlib>
+                #include <simd/simd.h>
+
+                using namespace metal;
+
+                struct main0_out
+                {
+                    float4 frag_color [[color(0)]];
+                };
+
+                struct main0_in
+                {
+                    float4 color [[user(locn0)]];
+                };
+
+                fragment main0_out main0(main0_in in [[stage_in]])
+                {
+                    main0_out out = {};
+                    out.frag_color = in.color;
+                    return out;
+                }
+            FS_END
+            desc.vs.source = vs_quad_source_metal_macos;
+            desc.vs.entry = "main0";
+            desc.vs.uniform_blocks[0].size = 64;
+            desc.vs.uniform_blocks[0].layout = .STD140;
+            desc.fs.source = fs_quad_source_metal_macos;
+            desc.fs.entry = "main0";
     }
     return desc;
 }

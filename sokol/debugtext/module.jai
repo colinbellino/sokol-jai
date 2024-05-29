@@ -1,17 +1,12 @@
 // machine generated, do not edit
-#import,dir "../gfx";
+#import,dir "../gfx"(DEBUG = USE_DLL, USE_GL = USE_DLL, USE_DLL = USE_DLL);
 
 sdtx_printf :: (s: string, args: ..Any) {
     #import "Basic";
     fstr := tprint(s, ..args);
     sdtx_putr(to_c_string(fstr), xx fstr.count);
 }
-#scope_module;
-SOKOL_DEBUG :: true;
-
-DEBUG :: true;
-USE_GL :: true;
-USE_DLL :: false;
+#module_parameters(DEBUG := false, USE_GL := false, USE_DLL := false);
 
 #scope_export;
 

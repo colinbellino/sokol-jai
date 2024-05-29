@@ -1,12 +1,7 @@
 // machine generated, do not edit
-#import,dir "../gfx";
+#import,dir "../gfx"(DEBUG = USE_DLL, USE_GL = USE_DLL, USE_DLL = USE_DLL);
 
-#scope_module;
-SOKOL_DEBUG :: true;
-
-DEBUG :: true;
-USE_GL :: true;
-USE_DLL :: false;
+#module_parameters(DEBUG := false, USE_GL := false, USE_DLL := false);
 
 #scope_export;
 

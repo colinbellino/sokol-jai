@@ -1,11 +1,6 @@
 // machine generated, do not edit
 
-#scope_module;
-SOKOL_DEBUG :: true;
-
-DEBUG :: true;
-USE_GL :: true;
-USE_DLL :: false;
+#module_parameters(DEBUG := false, USE_GL := false, USE_DLL := false);
 
 #scope_export;
 
@@ -53,7 +48,7 @@ else #if OS == .MACOS {
                 else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_x64_gl_release"; }
             }
         } else {
-            #system_library "Cocoa"; #system_library "QuartzCore"; #system_library "Metal"; #system_library "MetalKit";
+            #library "../libclang_rt.osx"; #system_library "Cocoa"; #system_library "QuartzCore"; #system_library "Metal"; #system_library "MetalKit";
             #if CPU == .ARM64 {
                 #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_metal_debug";   }
                 else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_metal_release"; }

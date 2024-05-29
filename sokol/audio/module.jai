@@ -1,11 +1,6 @@
 // machine generated, do not edit
 
-#scope_module;
-SOKOL_DEBUG :: true;
-
-DEBUG :: true;
-USE_GL :: true;
-USE_DLL :: false;
+#module_parameters(DEBUG := false, USE_GL := false, USE_DLL := false);
 
 #scope_export;
 
