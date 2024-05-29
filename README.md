@@ -38,27 +38,28 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     ```
 
 3. Build and run the samples:
+    Warning: examples that are commented out aren't implemented yet.
     ```
     jai ../examples/clear.jai && ../examples/clear
     jai ../examples/triangle.jai && ../examples/triangle
-    jai ../examples/quad.jai && ../examples/quad
-    jai ../examples/bufferoffsets.jai && ../examples/bufferoffsets
-    jai ../examples/cube.jai && ../examples/cube
-    jai ../examples/noninterleaved.jai && ../examples/noninterleaved
-    jai ../examples/texcube.jai && ../examples/texcube
-    jai ../examples/shapes.jai && ../examples/shapes
-    jai ../examples/offscreen.jai && ../examples/offscreen
-    jai ../examples/instancing.jai && ../examples/instancing
-    jai ../examples/mrt.jai && ../examples/mrt
+    # jai ../examples/quad.jai && ../examples/quad
+    # jai ../examples/bufferoffsets.jai && ../examples/bufferoffsets
+    # jai ../examples/cube.jai && ../examples/cube
+    # jai ../examples/noninterleaved.jai && ../examples/noninterleaved
+    # jai ../examples/texcube.jai && ../examples/texcube
+    # jai ../examples/shapes.jai && ../examples/shapes
+    # jai ../examples/offscreen.jai && ../examples/offscreen
+    # jai ../examples/instancing.jai && ../examples/instancing
+    # jai ../examples/mrt.jai && ../examples/mrt
     jai ../examples/blend.jai && ../examples/blend
-    jai ../examples/debugtext.jai && ../examples/debugtext
+    # jai ../examples/debugtext.jai && ../examples/debugtext
     jai ../examples/debugtext-print.jai && ../examples/debugtext-print
-    jai ../examples/debugtext-userfont && ../examples/debugtext-userfont
-    jai ../examples/saudio.jai && ../examples/saudio
-    jai ../examples/sgl.jai && ../examples/sgl
-    jai ../examples/sgl-points.jai && ../examples/sgl-points
-    jai ../examples/sgl-context.jai && ../examples/sgl-context
-    jai ../examples/vertexpull.jai && ../examples/vertexpull
+    # jai ../examples/debugtext-userfont && ../examples/debugtext-userfont
+    # jai ../examples/saudio.jai && ../examples/saudio
+    # jai ../examples/sgl.jai && ../examples/sgl
+    # jai ../examples/sgl-points.jai && ../examples/sgl-points
+    # jai ../examples/sgl-context.jai && ../examples/sgl-context
+    # jai ../examples/vertexpull.jai && ../examples/vertexpull
     ```
 
     By default, the backend 3D API will be selected based on the target platform:
