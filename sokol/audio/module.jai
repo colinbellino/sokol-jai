@@ -39,7 +39,7 @@ else #if OS == .MACOS {
         else #if !USE_GL && CPU == .X64   && !DEBUG { sokol_audio_clib :: #library "../dylib/sokol_dylib_macos_x64_metal_release.dylib"; }
     } else {
         #if USE_GL {
-            
+            #system_library "AudioToolbox";
             #if CPU == .ARM64 {
                 #if  DEBUG { sokol_audio_clib :: #library,no_dll "sokol_audio_macos_arm64_gl_debug";   }
                 else       { sokol_audio_clib :: #library,no_dll "sokol_audio_macos_arm64_gl_release"; }
@@ -48,7 +48,7 @@ else #if OS == .MACOS {
                 else       { sokol_audio_clib :: #library,no_dll "sokol_audio_macos_x64_gl_release"; }
             }
         } else {
-            
+            #system_library "AudioToolbox";
             #if CPU == .ARM64 {
                 #if  DEBUG { sokol_audio_clib :: #library,no_dll "sokol_audio_macos_arm64_metal_debug";   }
                 else       { sokol_audio_clib :: #library,no_dll "sokol_audio_macos_arm64_metal_release"; }
@@ -59,6 +59,7 @@ else #if OS == .MACOS {
         }
     }
 } else #if OS == .LINUX {
+    #system_library "asound"; #system_library "dl"; #system_library "pthread";
     #if  DEBUG { sokol_audio_clib :: #library,no_dll "sokol_audio_linux_x64_gl_debug";   }
     else       { sokol_audio_clib :: #library,no_dll "sokol_audio_linux_x64_gl_release"; }
 } else {
