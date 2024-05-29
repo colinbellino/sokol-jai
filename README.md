@@ -5,9 +5,9 @@ Auto-generated Jai bindings for the [sokol headers](https://github.com/floooh/so
 To include sokol in your project you can copy the [sokol](sokol/) directory.
 
 ## TODO:
-- Compile shaders
 - Windows support
 - Linux support
+- sokol_audio
 
 ## BUILD
 

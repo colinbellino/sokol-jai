@@ -4,10 +4,10 @@
 //  Minimal sample which just clears the default framebuffer
 //------------------------------------------------------------------------------
 #import "Basic";
-#import,dir "../sokol/log"(USE_GL=USE_GL);
-#import,dir "../sokol/gfx"(USE_GL=USE_GL);
-#import,dir "../sokol/app"(USE_GL=USE_GL);
-#import,dir "../sokol/glue"(USE_GL=USE_GL);
+#import,dir "../../sokol/log"(USE_GL=USE_GL);
+#import,dir "../../sokol/gfx"(USE_GL=USE_GL);
+#import,dir "../../sokol/app"(USE_GL=USE_GL);
+#import,dir "../../sokol/glue"(USE_GL=USE_GL);
 
 default_context: Context;
 pass_action: sg_pass_action;

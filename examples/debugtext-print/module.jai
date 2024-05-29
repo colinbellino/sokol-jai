@@ -4,11 +4,11 @@
 //  Simple text rendering with sokol/debugtext, formatting, tabs, etc...
 //------------------------------------------------------------------------------
 #import "Basic";
-#import,dir "../sokol/log";
-#import,dir "../sokol/gfx";
-#import,dir "../sokol/app";
-#import,dir "../sokol/glue";
-#import,dir "../sokol/debugtext";
+#import,dir "../../sokol/log";
+#import,dir "../../sokol/gfx";
+#import,dir "../../sokol/app";
+#import,dir "../../sokol/glue";
+#import,dir "../../sokol/debugtext";
 
 NUM_FONTS  :: 3;
 

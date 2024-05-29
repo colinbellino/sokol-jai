@@ -10,11 +10,12 @@
 
     workspace := compiler_create_workspace(tprint("Building example: %", example_name));
 
+    options.output_path = example_name;
     options.output_executable_name = example_name;
     set_build_options(options, workspace);
     compiler_begin_intercept(workspace);
     add_build_string(tprint("USE_GL :: %;", use_gl), workspace);
-    add_build_file(tprint("%.jai", example_name), workspace);
+    add_build_file(tprint("%/module.jai", example_name), workspace);
 
     while true {
         message := compiler_wait_for_message();
@@ -25,7 +26,7 @@
     }
     compiler_end_intercept(workspace);
 
-    run_command(tprint("./%", example_name));
+    run_command(tprint("./%/%", example_name, example_name));
 
     set_build_options_dc(.{ do_output = false });
 }
