@@ -1,7 +1,11 @@
 // machine generated, do not edit
 #import,dir "../gfx";
 
-printf :: print;
+sdtx_printf :: (s: string, args: ..Any) {
+    #import "Basic";
+    fstr := tprint(s, ..args);
+    sdtx_putr(to_c_string(fstr), xx fstr.count);
+}
 #scope_module;
 SOKOL_DEBUG :: true;
 

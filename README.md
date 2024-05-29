@@ -52,12 +52,12 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     jai ../examples/mrt.jai && ../examples/mrt
     jai ../examples/blend.jai && ../examples/blend
     jai ../examples/debugtext.jai && ../examples/debugtext
-    jai ../examples/debugtext.jaiprint/ && ../examples/debugtext-print
-    jai ../examples/debugtext.jaiuserfont/ && ../examples/debugtext-userfont
+    jai ../examples/debugtext-print.jai && ../examples/debugtext-print
+    jai ../examples/debugtext-userfont && ../examples/debugtext-userfont
     jai ../examples/saudio.jai && ../examples/saudio
     jai ../examples/sgl.jai && ../examples/sgl
-    jai ../examples/sgl.jaipoints/ && ../examples/sgl-points
-    jai ../examples/sgl.jaicontext/ && ../examples/sgl-context
+    jai ../examples/sgl-points.jai && ../examples/sgl-points
+    jai ../examples/sgl-context.jai && ../examples/sgl-context
     jai ../examples/vertexpull.jai && ../examples/vertexpull
     ```
 
