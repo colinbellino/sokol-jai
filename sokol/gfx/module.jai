@@ -7,21 +7,21 @@
 #if OS == .WINDOWS {
     #if USE_DLL {
         #if USE_GL {
-            #system_library "gdi32"; #system_library "dxguid"; #system_library "user32"; #system_library "shell32";
+            #system_library,link_always "gdi32"; #system_library,link_always "dxguid"; #system_library,link_always "user32"; #system_library,link_always "shell32";
             #if  DEBUG { sokol_gfx_clib :: #library "sokol_gfx_windows_x64_gl_debug";   }
             else       { sokol_gfx_clib :: #library "sokol_gfx_windows_x64_gl_release"; }
         } else {
-            #system_library "gdi32"; #system_library "dxguid"; #system_library "user32"; #system_library "shell32"; #system_library "d3d11";
+            #system_library,link_always "gdi32"; #system_library,link_always "dxguid"; #system_library,link_always "user32"; #system_library,link_always "shell32"; #system_library,link_always "d3d11";
             #if  DEBUG { sokol_gfx_clib :: #library "sokol_gfx_windows_x64_d3d11_debug";   }
             else       { sokol_gfx_clib :: #library "sokol_gfx_windows_x64_d3d11_release"; }
         }
     } else {
         #if USE_GL {
-            #system_library "gdi32"; #system_library "dxguid"; #system_library "user32"; #system_library "shell32";
+            #system_library,link_always "gdi32"; #system_library,link_always "dxguid"; #system_library,link_always "user32"; #system_library,link_always "shell32";
             #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_windows_x64_gl_debug";   }
             else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_windows_x64_gl_release"; }
         } else {
-            #system_library "gdi32"; #system_library "dxguid"; #system_library "user32"; #system_library "shell32"; #system_library "d3d11";
+            #system_library,link_always "gdi32"; #system_library,link_always "dxguid"; #system_library,link_always "user32"; #system_library,link_always "shell32"; #system_library,link_always "d3d11";
             #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_windows_x64_d3d11_debug";   }
             else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_windows_x64_d3d11_release"; }
         }
@@ -39,7 +39,7 @@ else #if OS == .MACOS {
         else #if !USE_GL && CPU == .X64   && !DEBUG { sokol_gfx_clib :: #library "../dylib/sokol_dylib_macos_x64_metal_release.dylib"; }
     } else {
         #if USE_GL {
-            #system_library "Cocoa"; #system_library "QuartzCore"; #system_library "OpenGL";
+            #system_library,link_always "Cocoa"; #system_library,link_always "QuartzCore"; #system_library,link_always "OpenGL";
             #if CPU == .ARM64 {
                 #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_gl_debug";   }
                 else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_gl_release"; }
@@ -48,7 +48,7 @@ else #if OS == .MACOS {
                 else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_x64_gl_release"; }
             }
         } else {
-            #library "../libclang_rt.osx"; #system_library "Cocoa"; #system_library "QuartzCore"; #system_library "Metal"; #system_library "MetalKit";
+            #library "../../libclang_rt.osx"; #system_library,link_always "Cocoa"; #system_library,link_always "QuartzCore"; #system_library,link_always "Metal"; #system_library,link_always "MetalKit";
             #if CPU == .ARM64 {
                 #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_metal_debug";   }
                 else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_metal_release"; }
@@ -59,7 +59,7 @@ else #if OS == .MACOS {
         }
     }
 } else #if OS == .LINUX {
-    #system_library "libXcursor"; #system_library "libX11"; #system_library "libXi"; #system_library "libGL";
+    #system_library,link_always "libXcursor"; #system_library,link_always "libX11"; #system_library,link_always "libXi"; #system_library,link_always "libGL";
     #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_linux_x64_gl_debug";   }
     else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_linux_x64_gl_release"; }
 } else {
