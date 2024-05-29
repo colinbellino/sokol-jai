@@ -1,14 +1,14 @@
 //------------------------------------------------------------------------------
-//  debugtext-print.jai
+//  debugtext-print/module.jai
 //
 //  Simple text rendering with sokol/debugtext, formatting, tabs, etc...
 //------------------------------------------------------------------------------
 #import "Basic";
-#import,dir "../../sokol/log";
-#import,dir "../../sokol/gfx";
-#import,dir "../../sokol/app";
-#import,dir "../../sokol/glue";
-#import,dir "../../sokol/debugtext";
+#import,dir "../../sokol/log"(USE_GL=USE_GL);
+#import,dir "../../sokol/gfx"(USE_GL=USE_GL);
+#import,dir "../../sokol/app"(USE_GL=USE_GL);
+#import,dir "../../sokol/glue"(USE_GL=USE_GL);
+#import,dir "../../sokol/debugtext"(USE_GL=USE_GL);
 
 NUM_FONTS  :: 3;
 

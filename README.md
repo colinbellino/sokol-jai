@@ -52,7 +52,7 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     # jai ../examples/first.jai - debugtext
     jai ../examples/first.jai - debugtext-print
     # jai ../examples/first.jai - debugtext-userfont
-    # jai ../examples/first.jai - saudio
+    jai ../examples/first.jai - saudio
     # jai ../examples/first.jai - sgl
     # jai ../examples/first.jai - sgl-points
     # jai ../examples/first.jai - sgl-context
