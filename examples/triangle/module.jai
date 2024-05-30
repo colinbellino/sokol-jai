@@ -32,7 +32,7 @@ init :: () #c_call {
             0.5, -0.5, 0.5,     0.0, 1.0, 0.0, 1.0,
             -0.5, -0.5, 0.5,    0.0, 0.0, 1.0, 1.0,
         ];
-        buffer := sg_buffer_desc.{ data = .{ ptr = *vertices, size = vertices.count * size_of(float) } };
+        buffer := sg_buffer_desc.{ data = .{ ptr = *vertices, size = size_of(type_of(vertices)) } };
         state.bind.vertex_buffers[0] = sg_make_buffer(*buffer);
 
         // create a shader and pipeline object (default render states are fine for triangle)

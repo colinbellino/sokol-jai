@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-//  offscreen/main.odin
+//  offscreen/main.jai
 //
 //  Render to an offscreen rendertarget texture, and use this texture
 //  for rendering to the display.
