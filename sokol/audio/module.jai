@@ -7,21 +7,21 @@
 #if OS == .WINDOWS {
     #if USE_DLL {
         #if USE_GL {
-            
+            #system_library,link_always "ole32";
             #if  DEBUG { sokol_audio_clib :: #library "sokol_audio_windows_x64_gl_debug";   }
             else       { sokol_audio_clib :: #library "sokol_audio_windows_x64_gl_release"; }
         } else {
-            
+            #system_library,link_always "ole32";
             #if  DEBUG { sokol_audio_clib :: #library "sokol_audio_windows_x64_d3d11_debug";   }
             else       { sokol_audio_clib :: #library "sokol_audio_windows_x64_d3d11_release"; }
         }
     } else {
         #if USE_GL {
-            
+            #system_library,link_always "ole32";
             #if  DEBUG { sokol_audio_clib :: #library,no_dll "sokol_audio_windows_x64_gl_debug";   }
             else       { sokol_audio_clib :: #library,no_dll "sokol_audio_windows_x64_gl_release"; }
         } else {
-            
+            #system_library,link_always "ole32";
             #if  DEBUG { sokol_audio_clib :: #library,no_dll "sokol_audio_windows_x64_d3d11_debug";   }
             else       { sokol_audio_clib :: #library,no_dll "sokol_audio_windows_x64_d3d11_release"; }
         }
