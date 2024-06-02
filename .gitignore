@@ -12,3 +12,4 @@ build/
 *.dylib
 *.exe
 *.dSYM/
+!libclang_rt.osx.a
