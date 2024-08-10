@@ -4,10 +4,6 @@ Auto-generated Jai bindings for the [sokol headers](https://github.com/floooh/so
 
 To include sokol in your project you can copy the [sokol](sokol/) directory.
 
-## TODO:
-- Linux support
-- sokol_audio
-
 ## BUILD
 
 Supported platforms are: Windows, macOS, Linux (with X11)
@@ -17,7 +13,7 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
 
 1. First build the required static link libraries:
 
-    ```
+    ```bash
     cd sokol
     # on macOS:
     ./build_clibs_macos.sh
@@ -29,14 +25,14 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     ```
 
 2. Create a build directory and cd into it:
-    ```
+    ```bash
     mkdir build
     cd build
     ```
 
 3. Build and run the samples:
-    Warning: examples that are commented out aren't implemented yet.
-    ```
+    Warning: examples that are commented out aren't implemented yet (the modules are still working, i just haven't taking the time to port the examples).
+    ```bash
     jai ../examples/first.jai - clear
     jai ../examples/first.jai - triangle
     # jai ../examples/first.jai - quad
@@ -45,7 +41,7 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     # jai ../examples/first.jai - noninterleaved
     # jai ../examples/first.jai - texcube
     # jai ../examples/first.jai - shapes
-    # jai ../examples/first.jai - offscreen
+    jai ../examples/first.jai - offscreen
     # jai ../examples/first.jai - instancing
     # jai ../examples/first.jai - mrt
     jai ../examples/first.jai - blend

@@ -35,46 +35,40 @@ state: struct {
 };
 
 init :: () #c_call {
-    desc := sg_desc.{
+    sg_setup(*(sg_desc.{
         environment = xx sglue_environment(),
         logger = .{ func = slog_func },
-    };
-    sg_setup(*desc);
+    }));
 
-    sdtx_desc := sdtx_desc_t.{
-        fonts = .[
-            sdtx_font_kc854(),
-            sdtx_font_c64(),
-            sdtx_font_oric(),
-            .{}, .{}, .{}, .{}, .{},
-        ],
+    sdtx_setup(*(sdtx_desc_t.{
+        fonts[0] = sdtx_font_kc854(),
+        fonts[1] = sdtx_font_c64(),
+        fonts[2] = sdtx_font_oric(),
         logger = .{ func = slog_func },
-    };
-    sdtx_setup(*sdtx_desc);
+    }));
 }
 
 frame :: () #c_call {
+    push_context,defer_pop default_context;
+
     frame_count := cast(u32) sapp_frame_count();
     frame_time := sapp_frame_duration() * 1000.0;
 
-    push_context default_context {
-        sdtx_canvas(sapp_widthf() * 0.5, sapp_heightf() * 0.5);
-        sdtx_origin(3.0, 3.0);
-        for i : 0 .. NUM_FONTS-1 {
-            color := state.palette[i];
-            sdtx_font(xx i);
-            sdtx_color3b(color.r, color.g, color.b);
-            sdtx_printf("Hello '%'!\n", ifx((frame_count & (1<<7)) == 0) then "Welt" else "World");
-            sdtx_printf("\tFrame Time:\t\t%.3f\n", frame_time);
-            sdtx_printf("\tFrame Count:\t%d\t0x%04X\n", frame_count, frame_count);
-            sdtx_putr("Range Test 1(xyzbla)", 12);
-            sdtx_putr("\nRange Test 2\n", 32);
-            sdtx_move_y(2);
-        }
+    sdtx_canvas(sapp_widthf() * 0.5, sapp_heightf() * 0.5);
+    sdtx_origin(3.0, 3.0);
+    for i : 0 .. NUM_FONTS-1 {
+        color := state.palette[i];
+        sdtx_font(xx i);
+        sdtx_color3b(color.r, color.g, color.b);
+        sdtx_printf("Hello '%'!\n", ifx((frame_count & (1<<7)) == 0) then "Welt" else "World");
+        sdtx_printf("\tFrame Time:\t\t%.3f\n", frame_time);
+        sdtx_printf("\tFrame Count:\t%d\t0x%04X\n", frame_count, frame_count);
+        sdtx_putr("Range Test 1(xyzbla)", 12);
+        sdtx_putr("\nRange Test 2\n", 32);
+        sdtx_move_y(2);
     }
 
-    pass := sg_pass.{ action = state.pass_action, swapchain = xx sglue_swapchain() };
-    sg_begin_pass(*pass);
+    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx sglue_swapchain() }));
     sdtx_draw();
     sg_end_pass();
     sg_commit();
@@ -86,7 +80,7 @@ cleanup :: () #c_call {
 }
 
 main :: () {
-    desc := sapp_desc.{
+    sapp_run(*(sapp_desc.{
         init_cb = init,
         frame_cb = frame,
         cleanup_cb = cleanup,
@@ -95,6 +89,5 @@ main :: () {
         window_title = "debugtext-printf",
         icon = .{ sokol_default = true },
         logger = .{ func = slog_func },
-    };
-    sapp_run(*desc);
+    }));
 }

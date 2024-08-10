@@ -56,7 +56,7 @@ cleanup :: () #c_call {
 }
 
 main :: () {
-    desc := sapp_desc.{
+    sapp_run(*(sapp_desc.{
         init_cb = init,
         frame_cb = frame,
         cleanup_cb = cleanup,
@@ -65,6 +65,5 @@ main :: () {
         window_title = "saudio",
         icon = .{ sokol_default = true },
         logger = .{ func = slog_func },
-    };
-    sapp_run(*desc);
+    }));
 }

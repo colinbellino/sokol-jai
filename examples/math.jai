@@ -1,3 +1,5 @@
+// Note: some of those procedures are already implemented in the language's Math module, but for the sake of keeping the examples close to the C version, we'll be using the ones below.
+// Ported from "HandmadeMath.h", available at https://github.com/floooh/sokol-samples/blob/master/sapp/HandmadeMath.h).
 #import "Math";
 
 persp_mat4 :: (fov: float, aspect: float, near: float, far: float) -> Matrix4 {
