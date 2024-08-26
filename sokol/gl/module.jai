@@ -77,6 +77,8 @@ sgl_destroy_context :: (ctx: sgl_context) -> void #foreign sokol_gl_clib;
 sgl_set_context :: (ctx: sgl_context) -> void #foreign sokol_gl_clib;
 sgl_get_context :: () -> sgl_context #foreign sokol_gl_clib;
 sgl_default_context :: () -> sgl_context #foreign sokol_gl_clib;
+sgl_num_vertices :: () -> s32 #foreign sokol_gl_clib;
+sgl_num_commands :: () -> s32 #foreign sokol_gl_clib;
 sgl_draw :: () -> void #foreign sokol_gl_clib;
 sgl_context_draw :: (ctx: sgl_context) -> void #foreign sokol_gl_clib;
 sgl_draw_layer :: (layer_id: s32) -> void #foreign sokol_gl_clib;
@@ -176,14 +178,14 @@ sgl_context :: struct {
     id : u32;
 }
 
-sgl_error_t :: enum u32 {
-    NO_ERROR :: 0;
-    VERTICES_FULL;
-    UNIFORMS_FULL;
-    COMMANDS_FULL;
-    STACK_OVERFLOW;
-    STACK_UNDERFLOW;
-    NO_CONTEXT;
+sgl_error_t :: struct {
+    any : bool;
+    vertices_full : bool;
+    uniforms_full : bool;
+    commands_full : bool;
+    stack_overflow : bool;
+    stack_underflow : bool;
+    no_context : bool;
 }
 
 sgl_context_desc_t :: struct {
