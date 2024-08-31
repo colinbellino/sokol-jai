@@ -1061,6 +1061,7 @@ sg_frame_stats_wgpu_bindings :: struct {
     num_bindgroup_cache_hits : u32;
     num_bindgroup_cache_misses : u32;
     num_bindgroup_cache_collisions : u32;
+    num_bindgroup_cache_invalidates : u32;
     num_bindgroup_cache_hash_vs_key_mismatch : u32;
 }
 
