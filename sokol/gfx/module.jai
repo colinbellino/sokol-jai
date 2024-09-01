@@ -1447,6 +1447,7 @@ sg_desc :: struct {
     uniform_buffer_size : s32;
     max_commit_listeners : s32;
     disable_validation : bool;
+    d3d11_shader_debugging : bool;
     mtl_force_managed_storage_mode : bool;
     mtl_use_command_buffer_with_retained_references : bool;
     wgpu_disable_bindgroups_cache : bool;
