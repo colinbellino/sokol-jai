@@ -62,6 +62,9 @@ else #if OS == .MACOS {
 } else #if OS == .LINUX {
     #if  DEBUG { sokol_shape_clib :: #library,no_dll "sokol_shape_linux_x64_gl_debug";   }
     else       { sokol_shape_clib :: #library,no_dll "sokol_shape_linux_x64_gl_release"; }
+} else #if OS == .WASM {
+    #if  DEBUG { sokol_shape_clib :: #library,no_dll "sokol_shape_wasm_wgpu_debug";   }
+    else       { sokol_shape_clib :: #library,no_dll "sokol_shape_wasm_wgpu_release"; }
 } else {
     log_error("This OS is currently not supported");
 }
