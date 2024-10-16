@@ -63,8 +63,8 @@ else #if OS == .MACOS {
     #if  DEBUG { sokol_glue_clib :: #library,no_dll "sokol_glue_linux_x64_gl_debug";   }
     else       { sokol_glue_clib :: #library,no_dll "sokol_glue_linux_x64_gl_release"; }
 } else #if OS == .WASM {
-    #if  DEBUG { sokol_glue_clib :: #library,no_dll "sokol_glue_wasm_wgpu_debug";   }
-    else       { sokol_glue_clib :: #library,no_dll "sokol_glue_wasm_wgpu_release"; }
+    #if  DEBUG { sokol_glue_clib :: #library,no_dll "sokol_glue_wasm_gl_debug";   }
+    else       { sokol_glue_clib :: #library,no_dll "sokol_glue_wasm_gl_release"; }
 } else {
     log_error("This OS is currently not supported");
 }

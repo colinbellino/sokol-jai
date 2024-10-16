@@ -62,8 +62,8 @@ else #if OS == .MACOS {
     #if  DEBUG { sokol_time_clib :: #library,no_dll "sokol_time_linux_x64_gl_debug";   }
     else       { sokol_time_clib :: #library,no_dll "sokol_time_linux_x64_gl_release"; }
 } else #if OS == .WASM {
-    #if  DEBUG { sokol_time_clib :: #library,no_dll "sokol_time_wasm_wgpu_debug";   }
-    else       { sokol_time_clib :: #library,no_dll "sokol_time_wasm_wgpu_release"; }
+    #if  DEBUG { sokol_time_clib :: #library,no_dll "sokol_time_wasm_gl_debug";   }
+    else       { sokol_time_clib :: #library,no_dll "sokol_time_wasm_gl_release"; }
 } else {
     log_error("This OS is currently not supported");
 }

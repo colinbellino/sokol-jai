@@ -19,25 +19,25 @@ build_lib_wasm_debug() {
 }
 
 # wasm + GL + Release
-build_lib_wasm_release sokol_log         log/sokol_log_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_gfx         gfx/sokol_gfx_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_app         app/sokol_app_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_glue        glue/sokol_glue_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_time        time/sokol_time_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_audio       audio/sokol_audio_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_debugtext   debugtext/sokol_debugtext_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_shape       shape/sokol_shape_wasm_wgpu_release SOKOL_WGPU
-build_lib_wasm_release sokol_gl          gl/sokol_gl_wasm_wgpu_release SOKOL_WGPU
+build_lib_wasm_release sokol_log         log/sokol_log_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_gfx         gfx/sokol_gfx_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_app         app/sokol_app_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_glue        glue/sokol_glue_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_time        time/sokol_time_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_audio       audio/sokol_audio_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_debugtext   debugtext/sokol_debugtext_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_shape       shape/sokol_shape_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_gl          gl/sokol_gl_wasm_gl_release SOKOL_GLES3
 
 # wasm + GL + Debug
-build_lib_wasm_debug sokol_log           log/sokol_log_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_gfx           gfx/sokol_gfx_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_app           app/sokol_app_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_glue          glue/sokol_glue_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_time          time/sokol_time_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_audio         audio/sokol_audio_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_debugtext     debugtext/sokol_debugtext_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_shape         shape/sokol_shape_wasm_wgpu_debug SOKOL_WGPU
-build_lib_wasm_debug sokol_gl            gl/sokol_gl_wasm_wgpu_debug SOKOL_WGPU
+build_lib_wasm_debug sokol_log           log/sokol_log_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_gfx           gfx/sokol_gfx_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_app           app/sokol_app_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_glue          glue/sokol_glue_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_time          time/sokol_time_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_audio         audio/sokol_audio_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_debugtext     debugtext/sokol_debugtext_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_shape         shape/sokol_shape_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_gl            gl/sokol_gl_wasm_gl_debug SOKOL_GLES3
 
 rm *.o
