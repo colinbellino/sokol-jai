@@ -62,9 +62,6 @@ else #if OS == .MACOS {
     #system_library,link_always "asound"; #system_library,link_always "dl"; #system_library,link_always "pthread";
     #if  DEBUG { sokol_audio_clib :: #library,no_dll "sokol_audio_linux_x64_gl_debug";   }
     else       { sokol_audio_clib :: #library,no_dll "sokol_audio_linux_x64_gl_release"; }
-} else #if OS == .WASM {
-    #if  DEBUG { sokol_audio_clib :: #library,no_dll "sokol_audio_wasm_gl_debug";   }
-    else       { sokol_audio_clib :: #library,no_dll "sokol_audio_wasm_gl_release"; }
 } else {
     log_error("This OS is currently not supported");
 }
