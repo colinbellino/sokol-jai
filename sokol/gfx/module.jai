@@ -62,6 +62,9 @@ else #if OS == .MACOS {
     #system_library,link_always "libXcursor"; #system_library,link_always "libX11"; #system_library,link_always "libXi"; #system_library,link_always "libGL";
     #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_linux_x64_gl_debug";   }
     else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_linux_x64_gl_release"; }
+} else #if OS == .WASM {
+    #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_wasm_gl_debug";   }
+    else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_wasm_gl_release"; }
 } else {
     log_error("This OS is currently not supported");
 }
