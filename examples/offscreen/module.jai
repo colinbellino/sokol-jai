@@ -110,8 +110,8 @@ init :: () #c_call {
         colors[0] = .{ pixel_format = .RGBA8 },
     };
     offscreen_pip_desc.layout.buffers[0] = xx sshape_vertex_buffer_layout_state();
-    offscreen_pip_desc.layout.attrs[ATTR_vs_offscreen_position] = xx sshape_position_vertex_attr_state();
-    offscreen_pip_desc.layout.attrs[ATTR_vs_offscreen_normal] = xx sshape_normal_vertex_attr_state();
+    offscreen_pip_desc.layout.attrs[ATTR_offscreen_position] = xx sshape_position_vertex_attr_state();
+    offscreen_pip_desc.layout.attrs[ATTR_offscreen_normal] = xx sshape_normal_vertex_attr_state();
     state.offscreen.pip = sg_make_pipeline(*offscreen_pip_desc);
 
     // and another pipeline-state-object for the default pass
@@ -125,9 +125,9 @@ init :: () #c_call {
         },
     };
     default_pip_desc.layout.buffers[0] = xx sshape_vertex_buffer_layout_state();
-    default_pip_desc.layout.attrs[ATTR_vs_default_position] = xx sshape_position_vertex_attr_state();
-    default_pip_desc.layout.attrs[ATTR_vs_default_normal] = xx sshape_normal_vertex_attr_state();
-    default_pip_desc.layout.attrs[ATTR_vs_default_texcoord0] = xx sshape_texcoord_vertex_attr_state();
+    default_pip_desc.layout.attrs[ATTR_default_position] = xx sshape_position_vertex_attr_state();
+    default_pip_desc.layout.attrs[ATTR_default_normal] = xx sshape_normal_vertex_attr_state();
+    default_pip_desc.layout.attrs[ATTR_default_texcoord0] = xx sshape_texcoord_vertex_attr_state();
     state.default.pip = sg_make_pipeline(*default_pip_desc);
 
     // a sampler object for sampling the render target as texture
@@ -149,8 +149,8 @@ init :: () #c_call {
         vertex_buffers[0] = vbuf,
         index_buffer = ibuf,
     };
-    state.default.bind.fs.images[SLOT_tex] = color_img;
-    state.default.bind.fs.samplers[SLOT_smp] = smp;
+    state.default.bind.images[IMG_tex] = color_img;
+    state.default.bind.samplers[SMP_smp] = smp;
 }
 
 frame :: () #c_call {
@@ -167,7 +167,7 @@ frame :: () #c_call {
     sg_begin_pass(*(sg_pass.{ action = state.offscreen.pass_action, attachments = state.offscreen.attachments }));
     sg_apply_pipeline(state.offscreen.pip);
     sg_apply_bindings(*state.offscreen.bind);
-    sg_apply_uniforms(.VS, SLOT_vs_params, *(sg_range.{ ptr = *vs_params, size = size_of(type_of(vs_params)) }));
+    sg_apply_uniforms(UB_vs_params, *(sg_range.{ ptr = *vs_params, size = size_of(type_of(vs_params)) }));
     sg_draw(state.donut.base_element, state.donut.num_elements, 1);
     sg_end_pass();
 
@@ -184,7 +184,7 @@ frame :: () #c_call {
     sg_begin_pass(*(sg_pass.{ action = state.default.pass_action, swapchain = xx sglue_swapchain() }));
     sg_apply_pipeline(state.default.pip);
     sg_apply_bindings(*state.default.bind);
-    sg_apply_uniforms(.VS, SLOT_vs_params, *(sg_range.{ ptr = *vs_params, size = size_of(type_of(vs_params)) }));
+    sg_apply_uniforms(UB_vs_params, *(sg_range.{ ptr = *vs_params, size = size_of(type_of(vs_params)) }));
     sg_draw(state.sphere.base_element, state.sphere.num_elements, 1);
     sg_end_pass();
 

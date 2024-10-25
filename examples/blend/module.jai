@@ -50,7 +50,7 @@ init :: () #c_call {
     // but only the first two floats from the position, need to
     // provide a stride to skip the gap to the next vertex
     bg_pip_desc.layout.buffers[0] = .{ stride = 28 };
-    bg_pip_desc.layout.attrs[ATTR_vs_bg_position] = .{ format = .FLOAT2 };
+    bg_pip_desc.layout.attrs[ATTR_bg_position] = .{ format = .FLOAT2 };
     bg_pip_desc.primitive_type = .TRIANGLE_STRIP;
     state.bg_pip = sg_make_pipeline(*bg_pip_desc);
 
@@ -63,8 +63,8 @@ init :: () #c_call {
         primitive_type = .TRIANGLE_STRIP,
         blend_color = .{ 1.0, 0.0, 0.0, 1.0 },
     };
-    pip_desc.layout.attrs[ATTR_vs_quad_position] = .{ format = .FLOAT3 };
-    pip_desc.layout.attrs[ATTR_vs_quad_color0]   = .{ format = .FLOAT4 };
+    pip_desc.layout.attrs[ATTR_quad_position] = .{ format = .FLOAT3 };
+    pip_desc.layout.attrs[ATTR_quad_color0]   = .{ format = .FLOAT4 };
     for src : 0 .. NUM_BLEND_FACTORS-1 {
         for dst : 0 .. NUM_BLEND_FACTORS-1 {
             pip_desc.colors[0].blend = .{
@@ -96,7 +96,7 @@ frame :: () #c_call {
     // draw a background quad
     sg_apply_pipeline(state.bg_pip);
     sg_apply_bindings(*state.bind);
-    sg_apply_uniforms(.FS, SLOT_bg_fs_params, *(sg_range.{ ptr = *state.bg_fs_params, size = size_of(Bg_Fs_Params) }));
+    sg_apply_uniforms(UB_bg_fs_params, *(sg_range.{ ptr = *state.bg_fs_params, size = size_of(Bg_Fs_Params) }));
     sg_draw(0, 4, 1);
 
     // draw the blended quads
@@ -112,7 +112,7 @@ frame :: () #c_call {
 
             sg_apply_pipeline(state.pips[src][dst]);
             sg_apply_bindings(*state.bind);
-            sg_apply_uniforms(.VS, SLOT_quad_vs_params, *(sg_range.{ ptr = *state.quad_vs_params, size = size_of(Quad_Vs_Params) }));
+            sg_apply_uniforms(UB_quad_vs_params, *(sg_range.{ ptr = *state.quad_vs_params, size = size_of(Quad_Vs_Params) }));
             sg_draw(0, 4, 1);
         }
     }
