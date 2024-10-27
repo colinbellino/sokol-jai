@@ -73,6 +73,7 @@ sg_setup :: (desc: *sg_desc) -> void #foreign sokol_gfx_clib;
 sg_shutdown :: () -> void #foreign sokol_gfx_clib;
 sg_isvalid :: () -> bool #foreign sokol_gfx_clib;
 sg_reset_state_cache :: () -> void #foreign sokol_gfx_clib;
+sg_install_trace_hooks :: (trace_hooks: *sg_trace_hooks) -> sg_trace_hooks #foreign sokol_gfx_clib;
 sg_push_debug_group :: (name: *u8) -> void #foreign sokol_gfx_clib;
 sg_pop_debug_group :: () -> void #foreign sokol_gfx_clib;
 sg_add_commit_listener :: (listener: sg_commit_listener) -> bool #foreign sokol_gfx_clib;
@@ -906,6 +907,67 @@ sg_attachments_desc :: struct {
     depth_stencil : sg_attachment_desc;
     label : *u8;
     _ : u32;
+}
+
+sg_trace_hooks :: struct {
+    user_data : *void;
+    reset_state_cache : (a0: *void) #c_call;
+    make_buffer : (a0: *sg_buffer_desc, a1: sg_buffer, a2: *void) #c_call;
+    make_image : (a0: *sg_image_desc, a1: sg_image, a2: *void) #c_call;
+    make_sampler : (a0: *sg_sampler_desc, a1: sg_sampler, a2: *void) #c_call;
+    make_shader : (a0: *sg_shader_desc, a1: sg_shader, a2: *void) #c_call;
+    make_pipeline : (a0: *sg_pipeline_desc, a1: sg_pipeline, a2: *void) #c_call;
+    make_attachments : (a0: *sg_attachments_desc, a1: sg_attachments, a2: *void) #c_call;
+    destroy_buffer : (a0: sg_buffer, a1: *void) #c_call;
+    destroy_image : (a0: sg_image, a1: *void) #c_call;
+    destroy_sampler : (a0: sg_sampler, a1: *void) #c_call;
+    destroy_shader : (a0: sg_shader, a1: *void) #c_call;
+    destroy_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
+    destroy_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    update_buffer : (a0: sg_buffer, a1: *sg_range, a2: *void) #c_call;
+    update_image : (a0: sg_image, a1: *sg_image_data, a2: *void) #c_call;
+    append_buffer : (a0: sg_buffer, a1: *sg_range, a2: s32, a3: *void) #c_call;
+    begin_pass : (a0: *sg_pass, a1: *void) #c_call;
+    apply_viewport : (a0: s32, a1: s32, a2: s32, a3: s32, a4: bool, a5: *void) #c_call;
+    apply_scissor_rect : (a0: s32, a1: s32, a2: s32, a3: s32, a4: bool, a5: *void) #c_call;
+    apply_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
+    apply_bindings : (a0: *sg_bindings, a1: *void) #c_call;
+    apply_uniforms : (a0: sg_shader_stage, a1: s32, a2: *sg_range, a3: *void) #c_call;
+    draw : (a0: s32, a1: s32, a2: s32, a3: *void) #c_call;
+    end_pass : (a0: *void) #c_call;
+    commit : (a0: *void) #c_call;
+    alloc_buffer : (a0: sg_buffer, a1: *void) #c_call;
+    alloc_image : (a0: sg_image, a1: *void) #c_call;
+    alloc_sampler : (a0: sg_sampler, a1: *void) #c_call;
+    alloc_shader : (a0: sg_shader, a1: *void) #c_call;
+    alloc_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
+    alloc_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    dealloc_buffer : (a0: sg_buffer, a1: *void) #c_call;
+    dealloc_image : (a0: sg_image, a1: *void) #c_call;
+    dealloc_sampler : (a0: sg_sampler, a1: *void) #c_call;
+    dealloc_shader : (a0: sg_shader, a1: *void) #c_call;
+    dealloc_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
+    dealloc_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    init_buffer : (a0: sg_buffer, a1: *sg_buffer_desc, a2: *void) #c_call;
+    init_image : (a0: sg_image, a1: *sg_image_desc, a2: *void) #c_call;
+    init_sampler : (a0: sg_sampler, a1: *sg_sampler_desc, a2: *void) #c_call;
+    init_shader : (a0: sg_shader, a1: *sg_shader_desc, a2: *void) #c_call;
+    init_pipeline : (a0: sg_pipeline, a1: *sg_pipeline_desc, a2: *void) #c_call;
+    init_attachments : (a0: sg_attachments, a1: *sg_attachments_desc, a2: *void) #c_call;
+    uninit_buffer : (a0: sg_buffer, a1: *void) #c_call;
+    uninit_image : (a0: sg_image, a1: *void) #c_call;
+    uninit_sampler : (a0: sg_sampler, a1: *void) #c_call;
+    uninit_shader : (a0: sg_shader, a1: *void) #c_call;
+    uninit_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
+    uninit_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    fail_buffer : (a0: sg_buffer, a1: *void) #c_call;
+    fail_image : (a0: sg_image, a1: *void) #c_call;
+    fail_sampler : (a0: sg_sampler, a1: *void) #c_call;
+    fail_shader : (a0: sg_shader, a1: *void) #c_call;
+    fail_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
+    fail_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    push_debug_group : (a0: *u8, a1: *void) #c_call;
+    pop_debug_group : (a0: *void) #c_call;
 }
 
 sg_slot_info :: struct {
