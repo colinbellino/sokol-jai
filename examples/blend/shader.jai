@@ -681,7 +681,7 @@ bg_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
         desc.fragment_func.source = xx *fs_bg_source_glsl410;
         desc.fragment_func.entry = "main";
         desc.attrs[0].glsl_name = "position";
-        desc.uniform_blocks[0].stage = .FRAGMENT
+        desc.uniform_blocks[0].stage = .FRAGMENT;
         desc.uniform_blocks[0].layout = .STD140;
         desc.uniform_blocks[0].size = 16;
         desc.uniform_blocks[0].glsl_uniforms[0].type = .FLOAT4;
@@ -696,7 +696,7 @@ bg_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
         desc.fragment_func.entry = "main";
         desc.attrs[0].hlsl_sem_name = "TEXCOORD";
         desc.attrs[0].hlsl_sem_index = 0;
-        desc.uniform_blocks[0].stage = .FRAGMENT
+        desc.uniform_blocks[0].stage = .FRAGMENT;
         desc.uniform_blocks[0].layout = .STD140;
         desc.uniform_blocks[0].size = 16;
         desc.uniform_blocks[0].hlsl_register_b_n = 0;
@@ -705,7 +705,7 @@ bg_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
         desc.vertex_func.entry = "main0";
         desc.fragment_func.source = xx *fs_bg_source_metal_macos;
         desc.fragment_func.entry = "main0";
-        desc.uniform_blocks[0].stage = .FRAGMENT
+        desc.uniform_blocks[0].stage = .FRAGMENT;
         desc.uniform_blocks[0].layout = .STD140;
         desc.uniform_blocks[0].size = 16;
         desc.uniform_blocks[0].msl_buffer_n = 0;
@@ -723,7 +723,7 @@ quad_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
         desc.fragment_func.entry = "main";
         desc.attrs[0].glsl_name = "position";
         desc.attrs[1].glsl_name = "color0";
-        desc.uniform_blocks[0].stage = .VERTEX
+        desc.uniform_blocks[0].stage = .VERTEX;
         desc.uniform_blocks[0].layout = .STD140;
         desc.uniform_blocks[0].size = 64;
         desc.uniform_blocks[0].glsl_uniforms[0].type = .FLOAT4;
@@ -740,7 +740,7 @@ quad_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
         desc.attrs[0].hlsl_sem_index = 0;
         desc.attrs[1].hlsl_sem_name = "TEXCOORD";
         desc.attrs[1].hlsl_sem_index = 1;
-        desc.uniform_blocks[0].stage = .VERTEX
+        desc.uniform_blocks[0].stage = .VERTEX;
         desc.uniform_blocks[0].layout = .STD140;
         desc.uniform_blocks[0].size = 64;
         desc.uniform_blocks[0].hlsl_register_b_n = 0;
@@ -749,7 +749,7 @@ quad_shader_desc :: (backend: sg_backend) -> sg_shader_desc {
         desc.vertex_func.entry = "main0";
         desc.fragment_func.source = xx *fs_quad_source_metal_macos;
         desc.fragment_func.entry = "main0";
-        desc.uniform_blocks[0].stage = .VERTEX
+        desc.uniform_blocks[0].stage = .VERTEX;
         desc.uniform_blocks[0].layout = .STD140;
         desc.uniform_blocks[0].size = 64;
         desc.uniform_blocks[0].msl_buffer_n = 0;
