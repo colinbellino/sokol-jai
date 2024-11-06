@@ -748,6 +748,13 @@ sg_shader_stage :: enum u32 {
     FRAGMENT;
 }
 
+sg_shader_function :: struct {
+    source : *u8;
+    bytecode : sg_range;
+    entry : *u8;
+    d3d11_target : *u8;
+}
+
 sg_shader_vertex_attr :: struct {
     glsl_name : *u8;
     hlsl_sem_name : *u8;
@@ -756,18 +763,17 @@ sg_shader_vertex_attr :: struct {
 
 sg_glsl_shader_uniform :: struct {
     type : sg_uniform_type;
-    offset : u32;
     array_count : u16;
     glsl_name : *u8;
 }
 
 sg_shader_uniform_block :: struct {
     stage : sg_shader_stage;
-    layout : sg_uniform_layout;
     size : u32;
     hlsl_register_b_n : u8;
     msl_buffer_n : u8;
     wgsl_group0_binding_n : u8;
+    layout : sg_uniform_layout;
     glsl_uniforms : [16]sg_glsl_shader_uniform;
 }
 
@@ -803,13 +809,6 @@ sg_shader_image_sampler_pair :: struct {
     image_slot : u8;
     sampler_slot : u8;
     glsl_name : *u8;
-}
-
-sg_shader_function :: struct {
-    source : *u8;
-    bytecode : sg_range;
-    entry : *u8;
-    d3d11_target : *u8;
 }
 
 sg_shader_desc :: struct {
@@ -1169,6 +1168,7 @@ sg_log_item :: enum u32 {
     WGPU_CREATE_PIPELINE_LAYOUT_FAILED;
     WGPU_CREATE_RENDER_PIPELINE_FAILED;
     WGPU_ATTACHMENTS_CREATE_TEXTURE_VIEW_FAILED;
+    DRAW_REQUIRED_BINDINGS_OR_UNIFORMS_MISSING;
     IDENTICAL_COMMIT_LISTENER;
     COMMIT_LISTENER_ARRAY_FULL;
     TRACE_HOOKS_NOT_ENABLED;
@@ -1363,7 +1363,7 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_PIPELINE;
     VALIDATE_ABND_PIPELINE_EXISTS;
     VALIDATE_ABND_PIPELINE_VALID;
-    VALIDATE_ABND_VBS;
+    VALIDATE_ABND_EXPECTED_VB;
     VALIDATE_ABND_VB_EXISTS;
     VALIDATE_ABND_VB_TYPE;
     VALIDATE_ABND_VB_OVERFLOW;
@@ -1378,17 +1378,14 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_IMAGE_MSAA;
     VALIDATE_ABND_EXPECTED_FILTERABLE_IMAGE;
     VALIDATE_ABND_EXPECTED_DEPTH_IMAGE;
-    VALIDATE_ABND_UNEXPECTED_IMAGE_BINDING;
     VALIDATE_ABND_EXPECTED_SAMPLER_BINDING;
     VALIDATE_ABND_UNEXPECTED_SAMPLER_COMPARE_NEVER;
     VALIDATE_ABND_EXPECTED_SAMPLER_COMPARE_NEVER;
     VALIDATE_ABND_EXPECTED_NONFILTERING_SAMPLER;
-    VALIDATE_ABND_UNEXPECTED_SAMPLER_BINDING;
     VALIDATE_ABND_SMP_EXISTS;
     VALIDATE_ABND_EXPECTED_STORAGEBUFFER_BINDING;
     VALIDATE_ABND_STORAGEBUFFER_EXISTS;
     VALIDATE_ABND_STORAGEBUFFER_BINDING_BUFFERTYPE;
-    VALIDATE_ABND_UNEXPECTED_STORAGEBUFFER_BINDING;
     VALIDATE_AUB_NO_PIPELINE;
     VALIDATE_AUB_NO_UB_AT_SLOT;
     VALIDATE_AUB_SIZE;
