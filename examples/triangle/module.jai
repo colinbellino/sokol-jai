@@ -41,8 +41,8 @@ init :: () #c_call {
     // create a shader and pipeline object (default render states are fine for triangle)
     pipeline: sg_pipeline_desc;
     pipeline.shader = shd;
-    pipeline.layout.attrs[ATTR_vs_position] = .{ format = .FLOAT3 };
-    pipeline.layout.attrs[ATTR_vs_color0]   = .{ format = .FLOAT4 };
+    pipeline.layout.attrs[ATTR_triangle_position] = .{ format = .FLOAT3 };
+    pipeline.layout.attrs[ATTR_triangle_color0]   = .{ format = .FLOAT4 };
     state.pip = sg_make_pipeline(*pipeline);
 
     // a pass action to clear framebuffer to black
