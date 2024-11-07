@@ -941,7 +941,7 @@ sg_trace_hooks :: struct {
     apply_scissor_rect : (a0: s32, a1: s32, a2: s32, a3: s32, a4: bool, a5: *void) #c_call;
     apply_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
     apply_bindings : (a0: *sg_bindings, a1: *void) #c_call;
-    apply_uniforms : (a0: sg_shader_stage, a1: s32, a2: *sg_range, a3: *void) #c_call;
+    apply_uniforms : (a0: s32, a1: *sg_range, a2: *void) #c_call;
     draw : (a0: s32, a1: s32, a2: s32, a3: *void) #c_call;
     end_pass : (a0: *void) #c_call;
     commit : (a0: *void) #c_call;
