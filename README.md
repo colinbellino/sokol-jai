@@ -31,28 +31,15 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     ```
 
 3. Build and run the samples:
-    Warning: examples that are commented out aren't implemented yet (the modules are still working, i just haven't taking the time to port the examples).
     ```bash
     jai ../examples/first.jai - clear
     jai ../examples/first.jai - triangle
-    # jai ../examples/first.jai - quad
-    # jai ../examples/first.jai - bufferoffsets
-    # jai ../examples/first.jai - cube
-    # jai ../examples/first.jai - noninterleaved
-    # jai ../examples/first.jai - texcube
-    # jai ../examples/first.jai - shapes
     jai ../examples/first.jai - offscreen
-    # jai ../examples/first.jai - instancing
-    # jai ../examples/first.jai - mrt
     jai ../examples/first.jai - blend
-    # jai ../examples/first.jai - debugtext
     jai ../examples/first.jai - debugtext-print
-    # jai ../examples/first.jai - debugtext-userfont
     jai ../examples/first.jai - saudio
-    # jai ../examples/first.jai - sgl
-    # jai ../examples/first.jai - sgl-points
-    # jai ../examples/first.jai - sgl-context
-    # jai ../examples/first.jai - vertexpull
+    jai ../examples/first.jai - fontstash-sapp
+    jai ../examples/first.jai - sgl-context-sapp
     ```
 
     By default, the backend 3D API will be selected based on the target platform:

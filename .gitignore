@@ -13,3 +13,4 @@ build/
 *.exe
 *.dSYM/
 !libclang_rt.osx.a
+.DS_Store
