@@ -499,7 +499,7 @@ sapp_desc :: struct {
     win32_console_utf8 : bool;
     win32_console_create : bool;
     win32_console_attach : bool;
-    html5_canvas_name : *u8;
+    html5_canvas_selector : *u8;
     html5_canvas_resize : bool;
     html5_preserve_drawing_buffer : bool;
     html5_premultiplied_alpha : bool;
