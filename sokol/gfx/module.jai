@@ -137,6 +137,17 @@ sg_query_sampler_defaults :: (desc: *sg_sampler_desc) -> sg_sampler_desc #foreig
 sg_query_shader_defaults :: (desc: *sg_shader_desc) -> sg_shader_desc #foreign sokol_gfx_clib;
 sg_query_pipeline_defaults :: (desc: *sg_pipeline_desc) -> sg_pipeline_desc #foreign sokol_gfx_clib;
 sg_query_attachments_defaults :: (desc: *sg_attachments_desc) -> sg_attachments_desc #foreign sokol_gfx_clib;
+sg_query_buffer_size :: (buf: sg_buffer) -> u64 #foreign sokol_gfx_clib;
+sg_query_buffer_type :: (buf: sg_buffer) -> sg_buffer_type #foreign sokol_gfx_clib;
+sg_query_buffer_usage :: (buf: sg_buffer) -> sg_usage #foreign sokol_gfx_clib;
+sg_query_image_type :: (img: sg_image) -> sg_image_type #foreign sokol_gfx_clib;
+sg_query_image_width :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
+sg_query_image_height :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
+sg_query_image_num_slices :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
+sg_query_image_num_mipmaps :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
+sg_query_image_pixelformat :: (img: sg_image) -> sg_pixel_format #foreign sokol_gfx_clib;
+sg_query_image_usage :: (img: sg_image) -> sg_usage #foreign sokol_gfx_clib;
+sg_query_image_sample_count :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 sg_alloc_buffer :: () -> sg_buffer #foreign sokol_gfx_clib;
 sg_alloc_image :: () -> sg_image #foreign sokol_gfx_clib;
 sg_alloc_sampler :: () -> sg_sampler #foreign sokol_gfx_clib;
