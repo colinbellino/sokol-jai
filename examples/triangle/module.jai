@@ -10,7 +10,6 @@
 #import,dir "../../sokol/glue"(USE_GL=USE_GL);
 #load "./shader.jai";
 
-default_context: Context;
 state: struct {
     pip:         sg_pipeline;
     bind:        sg_bindings;
@@ -18,10 +17,10 @@ state: struct {
 }
 
 init :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     sg_setup(*(sg_desc.{
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger = .{ func = slog_func },
     }));
 
@@ -50,7 +49,7 @@ init :: () #c_call {
 }
 
 frame :: () #c_call {
-    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx sglue_swapchain() }));
+    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx,force sglue_swapchain() }));
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(*state.bind);
     sg_draw(0, 3, 1);

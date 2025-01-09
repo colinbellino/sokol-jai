@@ -16,7 +16,6 @@ Color :: struct {
     r, g, b: u8;
 }
 
-default_context: Context;
 state: struct {
     pass_action: sg_pass_action;
     palette: [3]Color;
@@ -36,7 +35,7 @@ state: struct {
 
 init :: () #c_call {
     sg_setup(*(sg_desc.{
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger = .{ func = slog_func },
     }));
 
@@ -49,7 +48,7 @@ init :: () #c_call {
 }
 
 frame :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     frame_count := cast(u32) sapp_frame_count();
     frame_time := sapp_frame_duration() * 1000.0;
@@ -58,7 +57,7 @@ frame :: () #c_call {
     sdtx_origin(3.0, 3.0);
     for i : 0 .. NUM_FONTS-1 {
         color := state.palette[i];
-        sdtx_font(xx i);
+        sdtx_font(cast(s32) i);
         sdtx_color3b(color.r, color.g, color.b);
         sdtx_printf("Hello '%'!\n", ifx((frame_count & (1<<7)) == 0) then "Welt" else "World");
         sdtx_printf("\tFrame Time:\t\t%.3f\n", frame_time);
@@ -68,7 +67,7 @@ frame :: () #c_call {
         sdtx_move_y(2);
     }
 
-    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx sglue_swapchain() }));
+    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx,force sglue_swapchain() }));
     sdtx_draw();
     sg_end_pass();
     sg_commit();

@@ -13,7 +13,6 @@
 
 NUM_BLEND_FACTORS :: 15;
 
-default_context: Context;
 state: struct {
     pass_action:    sg_pass_action;
     bind:           sg_bindings;
@@ -25,10 +24,10 @@ state: struct {
 }
 
 init :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
     sg_setup(*(sg_desc.{
         pipeline_pool_size = NUM_BLEND_FACTORS * NUM_BLEND_FACTORS + 1,
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger = .{ func = slog_func },
     }));
 
@@ -80,7 +79,7 @@ init :: () #c_call {
 }
 
 frame :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
     t := cast(float) (sapp_frame_duration() * 60.0);
     state.r += 0.6 * t;
     state.bg_fs_params.tick += 1.0 * t;
@@ -91,7 +90,7 @@ frame :: () #c_call {
     view_proj := multiply_mat4(proj, view);
 
     // start rendering
-    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx sglue_swapchain() }));
+    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx,force sglue_swapchain() }));
 
     // draw a background quad
     sg_apply_pipeline(state.bg_pip);

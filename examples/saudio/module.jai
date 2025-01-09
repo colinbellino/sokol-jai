@@ -25,7 +25,7 @@ state: struct {
 
 init :: () #c_call {
     sg_setup(*(sg_desc.{
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger = .{ func = slog_func },
     }));
     saudio_setup(*(saudio_desc.{
@@ -45,7 +45,7 @@ frame :: () #c_call {
         }
     }
 
-    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx sglue_swapchain() }));
+    sg_begin_pass(*(sg_pass.{ action = state.pass_action, swapchain = xx,force sglue_swapchain() }));
     sg_end_pass();
     sg_commit();
 }

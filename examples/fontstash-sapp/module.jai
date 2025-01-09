@@ -12,7 +12,6 @@
 #import,dir "../../sokol/gl"(USE_GL=USE_GL);
 #import,dir "../../sokol/fontstash"(USE_GL=USE_GL);
 
-default_context: Context;
 state: struct {
     fons: *FONScontext;
     dpi_scale: float;
@@ -35,7 +34,6 @@ round_pow2 :: (v: float) -> s32 {
     return cast(s32) (vi + 1);
 }
 
-
 line :: (sx: float, sy: float, ex: float, ey: float) #c_call {
     sgl_begin_lines();
     sgl_c4b(255, 255, 0, 128);
@@ -45,11 +43,11 @@ line :: (sx: float, sy: float, ex: float, ey: float) #c_call {
 }
 
 init :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     state.dpi_scale = sapp_dpi_scale();
     sg_setup(*(sg_desc.{
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger = .{ func = slog_func },
     }));
     sgl_setup(*(sgl_desc_t.{
@@ -228,7 +226,7 @@ frame :: () #c_call {
                 clear_value = .{ 0.3, 0.3, 0.32, 1.0 },
             },
         },
-        swapchain = xx sglue_swapchain(),
+        swapchain = xx,force sglue_swapchain(),
     };
     sg_begin_pass(*pass);
     sgl_draw();
