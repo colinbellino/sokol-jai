@@ -20,7 +20,6 @@ OFFSCREEN_SAMPLECOUNT :: 1;
 OFFSCREEN_WIDTH :: 32;
 OFFSCREEN_HEIGHT :: 32;
 
-default_context: Context;
 state: struct {
     angle_deg: float64;
     offscreen: struct {
@@ -37,10 +36,10 @@ state: struct {
 }
 
 init :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     sg_setup(*(sg_desc.{
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger.func = slog_func,
     }));
 
@@ -104,7 +103,7 @@ init :: () #c_call {
 }
 
 frame :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     state.angle_deg += sapp_frame_duration() * 60.0;
     a := sgl_rad(cast(float) state.angle_deg);
@@ -120,7 +119,7 @@ frame :: () #c_call {
     sgl_set_context(SGL_DEFAULT_CONTEXT);
     sgl_defaults();
     sgl_enable_texture();
-    sgl_texture(xx state.offscreen.img, xx state.display.smp);
+    sgl_texture(xx,force state.offscreen.img, xx,force state.display.smp);
     sgl_load_pipeline(state.display.sgl_pip);
     sgl_matrix_mode_projection();
     sgl_perspective(sgl_rad(45.0), sapp_widthf()/sapp_heightf(), 0.1, 100.0);
@@ -133,7 +132,7 @@ frame :: () #c_call {
     sg_begin_pass(*(sg_pass.{ action = state.offscreen.pass_action, attachments = state.offscreen.attachments }));
         sgl_context_draw(state.offscreen.sgl_ctx);
     sg_end_pass();
-    sg_begin_pass(*(sg_pass.{ action = state.display.pass_action, swapchain = xx sglue_swapchain() }));
+    sg_begin_pass(*(sg_pass.{ action = state.display.pass_action, swapchain = xx,force sglue_swapchain() }));
         sgl_context_draw(SGL_DEFAULT_CONTEXT);
     sg_end_pass();
     sg_commit();

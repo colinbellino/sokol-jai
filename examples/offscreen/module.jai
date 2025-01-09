@@ -15,7 +15,6 @@
 
 OFFSCREEN_SAMPLE_COUNT :: 1;
 
-default_context: Context;
 state: struct {
     offscreen: struct {
         pass_action: sg_pass_action;
@@ -36,10 +35,10 @@ state: struct {
 }
 
 init :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     sg_setup(*(sg_desc.{
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger = .{ func = slog_func },
     }));
 
@@ -93,8 +92,8 @@ init :: () #c_call {
     }));
     state.sphere = sshape_element_range(*buf);
 
-    vbuf := sg_make_buffer(xx *sshape_vertex_buffer_desc(*buf));
-    ibuf := sg_make_buffer(xx *sshape_index_buffer_desc(*buf));
+    vbuf := sg_make_buffer(xx,force *sshape_vertex_buffer_desc(*buf));
+    ibuf := sg_make_buffer(xx,force *sshape_index_buffer_desc(*buf));
 
     // pipeline-state-object for offscreen-rendered donut, don't need texture coord here
     offscreen_pip_desc := sg_pipeline_desc.{
@@ -109,9 +108,9 @@ init :: () #c_call {
         },
         colors[0] = .{ pixel_format = .RGBA8 },
     };
-    offscreen_pip_desc.layout.buffers[0] = xx sshape_vertex_buffer_layout_state();
-    offscreen_pip_desc.layout.attrs[ATTR_offscreen_position] = xx sshape_position_vertex_attr_state();
-    offscreen_pip_desc.layout.attrs[ATTR_offscreen_normal] = xx sshape_normal_vertex_attr_state();
+    offscreen_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state();
+    offscreen_pip_desc.layout.attrs[ATTR_offscreen_position] = xx,force sshape_position_vertex_attr_state();
+    offscreen_pip_desc.layout.attrs[ATTR_offscreen_normal] = xx,force sshape_normal_vertex_attr_state();
     state.offscreen.pip = sg_make_pipeline(*offscreen_pip_desc);
 
     // and another pipeline-state-object for the default pass
@@ -124,10 +123,10 @@ init :: () #c_call {
             write_enabled = true,
         },
     };
-    default_pip_desc.layout.buffers[0] = xx sshape_vertex_buffer_layout_state();
-    default_pip_desc.layout.attrs[ATTR_default_position] = xx sshape_position_vertex_attr_state();
-    default_pip_desc.layout.attrs[ATTR_default_normal] = xx sshape_normal_vertex_attr_state();
-    default_pip_desc.layout.attrs[ATTR_default_texcoord0] = xx sshape_texcoord_vertex_attr_state();
+    default_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state();
+    default_pip_desc.layout.attrs[ATTR_default_position] = xx,force sshape_position_vertex_attr_state();
+    default_pip_desc.layout.attrs[ATTR_default_normal] = xx,force sshape_normal_vertex_attr_state();
+    default_pip_desc.layout.attrs[ATTR_default_texcoord0] = xx,force sshape_texcoord_vertex_attr_state();
     state.default.pip = sg_make_pipeline(*default_pip_desc);
 
     // a sampler object for sampling the render target as texture
@@ -154,7 +153,7 @@ init :: () #c_call {
 }
 
 frame :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     t := cast(float) (sapp_frame_duration() * 60.0);
     state.rx += 1.0 * t;
@@ -181,7 +180,7 @@ frame :: () #c_call {
             eye_dist = 2.0,
         ),
     };
-    sg_begin_pass(*(sg_pass.{ action = state.default.pass_action, swapchain = xx sglue_swapchain() }));
+    sg_begin_pass(*(sg_pass.{ action = state.default.pass_action, swapchain = xx,force sglue_swapchain() }));
     sg_apply_pipeline(state.default.pip);
     sg_apply_bindings(*state.default.bind);
     sg_apply_uniforms(UB_vs_params, *(sg_range.{ ptr = *vs_params, size = size_of(type_of(vs_params)) }));

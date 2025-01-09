@@ -9,14 +9,13 @@
 #import,dir "../../sokol/app"(USE_GL=USE_GL);
 #import,dir "../../sokol/glue"(USE_GL=USE_GL);
 
-default_context: Context;
 pass_action: sg_pass_action;
 
 init :: () #c_call {
-    push_context,defer_pop default_context;
+    push_context,defer_pop;
 
     sg_setup(*(sg_desc.{
-        environment = xx sglue_environment(),
+        environment = xx,force sglue_environment(),
         logger = .{ func = slog_func },
     }));
     pass_action.colors[0] = .{ load_action = .CLEAR, clear_value = .{ 1.0, 0.0, 0.0, 1.0 } };
@@ -37,7 +36,7 @@ init :: () #c_call {
 frame :: () #c_call {
     g := pass_action.colors[0].clear_value.g + 0.01;
     pass_action.colors[0].clear_value.g = ifx(g > 1.0) then 0.0 else g;
-    sg_begin_pass(*(sg_pass.{ action = pass_action, swapchain = xx sglue_swapchain() }));
+    sg_begin_pass(*(sg_pass.{ action = pass_action, swapchain = xx,force sglue_swapchain() }));
     sg_end_pass();
     sg_commit();
 }
