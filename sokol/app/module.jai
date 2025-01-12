@@ -1864,6 +1864,7 @@ sapp_desc :: struct {
     html5_preserve_drawing_buffer : bool;
     html5_premultiplied_alpha : bool;
     html5_ask_leave_site : bool;
+    html5_update_document_title : bool;
     html5_bubble_mouse_events : bool;
     html5_bubble_touch_events : bool;
     html5_bubble_wheel_events : bool;
