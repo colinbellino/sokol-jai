@@ -178,7 +178,7 @@ else #if OS == .MACOS {
         .logger = {
             .func = slog_func
         }
-    })
+    });
 */
 slog_func :: (tag: *u8, log_level: u32, log_item: u32, message: *u8, line_nr: u32, filename: *u8, user_data: *void) -> void #foreign sokol_log_clib;
 

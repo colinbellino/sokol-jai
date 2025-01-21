@@ -1671,7 +1671,7 @@ else #if OS == .MACOS {
     log_error("This OS is currently not supported");
 }
 
-// setup and misc function
+// setup and misc functions
 sg_setup :: (desc: *sg_desc) -> void #foreign sokol_gfx_clib;
 sg_shutdown :: () -> void #foreign sokol_gfx_clib;
 sg_isvalid :: () -> bool #foreign sokol_gfx_clib;
@@ -1681,7 +1681,7 @@ sg_push_debug_group :: (name: *u8) -> void #foreign sokol_gfx_clib;
 sg_pop_debug_group :: () -> void #foreign sokol_gfx_clib;
 sg_add_commit_listener :: (listener: sg_commit_listener) -> bool #foreign sokol_gfx_clib;
 sg_remove_commit_listener :: (listener: sg_commit_listener) -> bool #foreign sokol_gfx_clib;
-// resource creation, destruction and updatin
+// resource creation, destruction and updating
 sg_make_buffer :: (desc: *sg_buffer_desc) -> sg_buffer #foreign sokol_gfx_clib;
 sg_make_image :: (desc: *sg_image_desc) -> sg_image #foreign sokol_gfx_clib;
 sg_make_sampler :: (desc: *sg_sampler_desc) -> sg_sampler #foreign sokol_gfx_clib;
@@ -1699,7 +1699,7 @@ sg_update_image :: (img: sg_image, data: *sg_image_data) -> void #foreign sokol_
 sg_append_buffer :: (buf: sg_buffer, data: *sg_range) -> s32 #foreign sokol_gfx_clib;
 sg_query_buffer_overflow :: (buf: sg_buffer) -> bool #foreign sokol_gfx_clib;
 sg_query_buffer_will_overflow :: (buf: sg_buffer, size: u64) -> bool #foreign sokol_gfx_clib;
-// rendering function
+// rendering functions
 sg_begin_pass :: (pass: *sg_pass) -> void #foreign sokol_gfx_clib;
 sg_apply_viewport :: (x: s32, y: s32, width: s32, height: s32, origin_top_left: bool) -> void #foreign sokol_gfx_clib;
 sg_apply_viewportf :: (x: float, y: float, width: float, height: float, origin_top_left: bool) -> void #foreign sokol_gfx_clib;
@@ -1711,7 +1711,7 @@ sg_apply_uniforms :: (ub_slot: s32, data: *sg_range) -> void #foreign sokol_gfx_
 sg_draw :: (base_element: s32, num_elements: s32, num_instances: s32) -> void #foreign sokol_gfx_clib;
 sg_end_pass :: () -> void #foreign sokol_gfx_clib;
 sg_commit :: () -> void #foreign sokol_gfx_clib;
-// getting informatio
+// getting information
 sg_query_desc :: () -> sg_desc #foreign sokol_gfx_clib;
 sg_query_backend :: () -> sg_backend #foreign sokol_gfx_clib;
 sg_query_features :: () -> sg_features #foreign sokol_gfx_clib;
@@ -1719,35 +1719,35 @@ sg_query_limits :: () -> sg_limits #foreign sokol_gfx_clib;
 sg_query_pixelformat :: (fmt: sg_pixel_format) -> sg_pixelformat_info #foreign sokol_gfx_clib;
 sg_query_row_pitch :: (fmt: sg_pixel_format, width: s32, row_align_bytes: s32) -> s32 #foreign sokol_gfx_clib;
 sg_query_surface_pitch :: (fmt: sg_pixel_format, width: s32, height: s32, row_align_bytes: s32) -> s32 #foreign sokol_gfx_clib;
-// get current state of a resource (INITIAL, ALLOC, VALID, FAILED, INVALID
+// get current state of a resource (INITIAL, ALLOC, VALID, FAILED, INVALID)
 sg_query_buffer_state :: (buf: sg_buffer) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_image_state :: (img: sg_image) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_sampler_state :: (smp: sg_sampler) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_shader_state :: (shd: sg_shader) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_pipeline_state :: (pip: sg_pipeline) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_attachments_state :: (atts: sg_attachments) -> sg_resource_state #foreign sokol_gfx_clib;
-// get runtime information about a resourc
+// get runtime information about a resource
 sg_query_buffer_info :: (buf: sg_buffer) -> sg_buffer_info #foreign sokol_gfx_clib;
 sg_query_image_info :: (img: sg_image) -> sg_image_info #foreign sokol_gfx_clib;
 sg_query_sampler_info :: (smp: sg_sampler) -> sg_sampler_info #foreign sokol_gfx_clib;
 sg_query_shader_info :: (shd: sg_shader) -> sg_shader_info #foreign sokol_gfx_clib;
 sg_query_pipeline_info :: (pip: sg_pipeline) -> sg_pipeline_info #foreign sokol_gfx_clib;
 sg_query_attachments_info :: (atts: sg_attachments) -> sg_attachments_info #foreign sokol_gfx_clib;
-// get desc structs matching a specific resource (NOTE that not all creation attributes may be provided
+// get desc structs matching a specific resource (NOTE that not all creation attributes may be provided)
 sg_query_buffer_desc :: (buf: sg_buffer) -> sg_buffer_desc #foreign sokol_gfx_clib;
 sg_query_image_desc :: (img: sg_image) -> sg_image_desc #foreign sokol_gfx_clib;
 sg_query_sampler_desc :: (smp: sg_sampler) -> sg_sampler_desc #foreign sokol_gfx_clib;
 sg_query_shader_desc :: (shd: sg_shader) -> sg_shader_desc #foreign sokol_gfx_clib;
 sg_query_pipeline_desc :: (pip: sg_pipeline) -> sg_pipeline_desc #foreign sokol_gfx_clib;
 sg_query_attachments_desc :: (atts: sg_attachments) -> sg_attachments_desc #foreign sokol_gfx_clib;
-// get resource creation desc struct with their default values replace
+// get resource creation desc struct with their default values replaced
 sg_query_buffer_defaults :: (desc: *sg_buffer_desc) -> sg_buffer_desc #foreign sokol_gfx_clib;
 sg_query_image_defaults :: (desc: *sg_image_desc) -> sg_image_desc #foreign sokol_gfx_clib;
 sg_query_sampler_defaults :: (desc: *sg_sampler_desc) -> sg_sampler_desc #foreign sokol_gfx_clib;
 sg_query_shader_defaults :: (desc: *sg_shader_desc) -> sg_shader_desc #foreign sokol_gfx_clib;
 sg_query_pipeline_defaults :: (desc: *sg_pipeline_desc) -> sg_pipeline_desc #foreign sokol_gfx_clib;
 sg_query_attachments_defaults :: (desc: *sg_attachments_desc) -> sg_attachments_desc #foreign sokol_gfx_clib;
-// assorted query function
+// assorted query functions
 sg_query_buffer_size :: (buf: sg_buffer) -> u64 #foreign sokol_gfx_clib;
 sg_query_buffer_type :: (buf: sg_buffer) -> sg_buffer_type #foreign sokol_gfx_clib;
 sg_query_buffer_usage :: (buf: sg_buffer) -> sg_usage #foreign sokol_gfx_clib;
@@ -1759,7 +1759,7 @@ sg_query_image_num_mipmaps :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 sg_query_image_pixelformat :: (img: sg_image) -> sg_pixel_format #foreign sokol_gfx_clib;
 sg_query_image_usage :: (img: sg_image) -> sg_usage #foreign sokol_gfx_clib;
 sg_query_image_sample_count :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
-// separate resource allocation and initialization (for async setup
+// separate resource allocation and initialization (for async setup)
 sg_alloc_buffer :: () -> sg_buffer #foreign sokol_gfx_clib;
 sg_alloc_image :: () -> sg_image #foreign sokol_gfx_clib;
 sg_alloc_sampler :: () -> sg_sampler #foreign sokol_gfx_clib;
@@ -1790,70 +1790,70 @@ sg_fail_sampler :: (smp: sg_sampler) -> void #foreign sokol_gfx_clib;
 sg_fail_shader :: (shd: sg_shader) -> void #foreign sokol_gfx_clib;
 sg_fail_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
 sg_fail_attachments :: (atts: sg_attachments) -> void #foreign sokol_gfx_clib;
-// frame stat
+// frame stats
 sg_enable_frame_stats :: () -> void #foreign sokol_gfx_clib;
 sg_disable_frame_stats :: () -> void #foreign sokol_gfx_clib;
 sg_frame_stats_enabled :: () -> bool #foreign sokol_gfx_clib;
 sg_query_frame_stats :: () -> sg_frame_stats #foreign sokol_gfx_clib;
-// D3D11: return ID3D11Devic
+// D3D11: return ID3D11Device
 sg_d3d11_device :: () -> *void #foreign sokol_gfx_clib;
-// D3D11: return ID3D11DeviceContex
+// D3D11: return ID3D11DeviceContext
 sg_d3d11_device_context :: () -> *void #foreign sokol_gfx_clib;
-// D3D11: get internal buffer resource object
+// D3D11: get internal buffer resource objects
 sg_d3d11_query_buffer_info :: (buf: sg_buffer) -> sg_d3d11_buffer_info #foreign sokol_gfx_clib;
-// D3D11: get internal image resource object
+// D3D11: get internal image resource objects
 sg_d3d11_query_image_info :: (img: sg_image) -> sg_d3d11_image_info #foreign sokol_gfx_clib;
-// D3D11: get internal sampler resource object
+// D3D11: get internal sampler resource objects
 sg_d3d11_query_sampler_info :: (smp: sg_sampler) -> sg_d3d11_sampler_info #foreign sokol_gfx_clib;
-// D3D11: get internal shader resource object
+// D3D11: get internal shader resource objects
 sg_d3d11_query_shader_info :: (shd: sg_shader) -> sg_d3d11_shader_info #foreign sokol_gfx_clib;
-// D3D11: get internal pipeline resource object
+// D3D11: get internal pipeline resource objects
 sg_d3d11_query_pipeline_info :: (pip: sg_pipeline) -> sg_d3d11_pipeline_info #foreign sokol_gfx_clib;
-// D3D11: get internal pass resource object
+// D3D11: get internal pass resource objects
 sg_d3d11_query_attachments_info :: (atts: sg_attachments) -> sg_d3d11_attachments_info #foreign sokol_gfx_clib;
-// Metal: return __bridge-casted MTLDevic
+// Metal: return __bridge-casted MTLDevice
 sg_mtl_device :: () -> *void #foreign sokol_gfx_clib;
-// Metal: return __bridge-casted MTLRenderCommandEncoder in current pass (or zero if outside pass
+// Metal: return __bridge-casted MTLRenderCommandEncoder in current pass (or zero if outside pass)
 sg_mtl_render_command_encoder :: () -> *void #foreign sokol_gfx_clib;
-// Metal: get internal __bridge-casted buffer resource object
+// Metal: get internal __bridge-casted buffer resource objects
 sg_mtl_query_buffer_info :: (buf: sg_buffer) -> sg_mtl_buffer_info #foreign sokol_gfx_clib;
-// Metal: get internal __bridge-casted image resource object
+// Metal: get internal __bridge-casted image resource objects
 sg_mtl_query_image_info :: (img: sg_image) -> sg_mtl_image_info #foreign sokol_gfx_clib;
-// Metal: get internal __bridge-casted sampler resource object
+// Metal: get internal __bridge-casted sampler resource objects
 sg_mtl_query_sampler_info :: (smp: sg_sampler) -> sg_mtl_sampler_info #foreign sokol_gfx_clib;
-// Metal: get internal __bridge-casted shader resource object
+// Metal: get internal __bridge-casted shader resource objects
 sg_mtl_query_shader_info :: (shd: sg_shader) -> sg_mtl_shader_info #foreign sokol_gfx_clib;
-// Metal: get internal __bridge-casted pipeline resource object
+// Metal: get internal __bridge-casted pipeline resource objects
 sg_mtl_query_pipeline_info :: (pip: sg_pipeline) -> sg_mtl_pipeline_info #foreign sokol_gfx_clib;
-// WebGPU: return WGPUDevice objec
+// WebGPU: return WGPUDevice object
 sg_wgpu_device :: () -> *void #foreign sokol_gfx_clib;
-// WebGPU: return WGPUQueue objec
+// WebGPU: return WGPUQueue object
 sg_wgpu_queue :: () -> *void #foreign sokol_gfx_clib;
-// WebGPU: return this frame's WGPUCommandEncode
+// WebGPU: return this frame's WGPUCommandEncoder
 sg_wgpu_command_encoder :: () -> *void #foreign sokol_gfx_clib;
-// WebGPU: return WGPURenderPassEncoder of current pas
+// WebGPU: return WGPURenderPassEncoder of current pass
 sg_wgpu_render_pass_encoder :: () -> *void #foreign sokol_gfx_clib;
-// WebGPU: get internal buffer resource object
+// WebGPU: get internal buffer resource objects
 sg_wgpu_query_buffer_info :: (buf: sg_buffer) -> sg_wgpu_buffer_info #foreign sokol_gfx_clib;
-// WebGPU: get internal image resource object
+// WebGPU: get internal image resource objects
 sg_wgpu_query_image_info :: (img: sg_image) -> sg_wgpu_image_info #foreign sokol_gfx_clib;
-// WebGPU: get internal sampler resource object
+// WebGPU: get internal sampler resource objects
 sg_wgpu_query_sampler_info :: (smp: sg_sampler) -> sg_wgpu_sampler_info #foreign sokol_gfx_clib;
-// WebGPU: get internal shader resource object
+// WebGPU: get internal shader resource objects
 sg_wgpu_query_shader_info :: (shd: sg_shader) -> sg_wgpu_shader_info #foreign sokol_gfx_clib;
-// WebGPU: get internal pipeline resource object
+// WebGPU: get internal pipeline resource objects
 sg_wgpu_query_pipeline_info :: (pip: sg_pipeline) -> sg_wgpu_pipeline_info #foreign sokol_gfx_clib;
-// WebGPU: get internal pass resource object
+// WebGPU: get internal pass resource objects
 sg_wgpu_query_attachments_info :: (atts: sg_attachments) -> sg_wgpu_attachments_info #foreign sokol_gfx_clib;
-// GL: get internal buffer resource object
+// GL: get internal buffer resource objects
 sg_gl_query_buffer_info :: (buf: sg_buffer) -> sg_gl_buffer_info #foreign sokol_gfx_clib;
-// GL: get internal image resource object
+// GL: get internal image resource objects
 sg_gl_query_image_info :: (img: sg_image) -> sg_gl_image_info #foreign sokol_gfx_clib;
-// GL: get internal sampler resource object
+// GL: get internal sampler resource objects
 sg_gl_query_sampler_info :: (smp: sg_sampler) -> sg_gl_sampler_info #foreign sokol_gfx_clib;
-// GL: get internal shader resource object
+// GL: get internal shader resource objects
 sg_gl_query_shader_info :: (shd: sg_shader) -> sg_gl_shader_info #foreign sokol_gfx_clib;
-// GL: get internal pass resource object
+// GL: get internal pass resource objects
 sg_gl_query_attachments_info :: (atts: sg_attachments) -> sg_gl_attachments_info #foreign sokol_gfx_clib;
 
 sg_buffer :: struct {
@@ -1910,7 +1910,7 @@ sg_color :: struct {
     sg_backend
 
     The active 3D-API backend, use the function sg_query_backend()
-    to get the currently active backend
+    to get the currently active backend.
 */
 sg_backend :: enum u32 {
     GLCORE;
@@ -1963,7 +1963,7 @@ sg_backend :: enum u32 {
     the default formats are:
 
         - for the Metal, D3D11 and WebGPU backends: SG_PIXELFORMAT_BGRA8
-        - for GL backends: SG_PIXELFORMAT_RGBA
+        - for GL backends: SG_PIXELFORMAT_RGBA8
 */
 sg_pixel_format :: enum u32 {
     DEFAULT;
@@ -2087,7 +2087,7 @@ sg_limits :: struct {
     operations will silently be dropped.
 
     The special INVALID state is returned in sg_query_xxx_state() if no
-    resource object exists for the provided resource id
+    resource object exists for the provided resource id.
 */
 sg_resource_state :: enum u32 {
     INITIAL;
@@ -2129,7 +2129,7 @@ sg_resource_state :: enum u32 {
     size is used for rendering, you only need to make sure that the data that
     *is* used is valid).
 
-    The default usage is SG_USAGE_IMMUTABLE
+    The default usage is SG_USAGE_IMMUTABLE.
 */
 sg_usage :: enum u32 {
     DEFAULT;
@@ -2146,7 +2146,7 @@ sg_usage :: enum u32 {
 
     Used in the sg_buffer_desc.type member when creating a buffer.
 
-    The default value is SG_BUFFERTYPE_VERTEXBUFFER
+    The default value is SG_BUFFERTYPE_VERTEXBUFFER.
 */
 sg_buffer_type :: enum u32 {
     DEFAULT;
@@ -2164,7 +2164,7 @@ sg_buffer_type :: enum u32 {
     This is used in the sg_pipeline_desc.index_type member when creating a
     pipeline object.
 
-    The default index type is SG_INDEXTYPE_NONE
+    The default index type is SG_INDEXTYPE_NONE.
 */
 sg_index_type :: enum u32 {
     DEFAULT;
@@ -2182,7 +2182,7 @@ sg_index_type :: enum u32 {
     in the shader (both must match and will be checked in the validation layer
     when calling sg_apply_bindings).
 
-    The default image type when creating an image is SG_IMAGETYPE_2D
+    The default image type when creating an image is SG_IMAGETYPE_2D.
 */
 sg_image_type :: enum u32 {
     DEFAULT;
@@ -2212,7 +2212,7 @@ sg_image_type :: enum u32 {
     - SG_PIXELFORMAT_RGBA32F
 
     (when using sokol-shdc, also check out the meta tags `@image_sample_type`
-    and `@sampler_type`
+    and `@sampler_type`)
 */
 sg_image_sample_type :: enum u32 {
     DEFAULT;
@@ -2237,7 +2237,7 @@ sg_image_sample_type :: enum u32 {
     - SG_IMAGESAMPLETYPE_UNFILTERABLE_FLOAT => SG_SAMPLERTYPE_NONFILTERING
     - SG_IMAGESAMPLETYPE_SINT => SG_SAMPLERTYPE_NONFILTERING
     - SG_IMAGESAMPLETYPE_UINT => SG_SAMPLERTYPE_NONFILTERING
-    - SG_IMAGESAMPLETYPE_DEPTH => SG_SAMPLERTYPE_COMPARISO
+    - SG_IMAGESAMPLETYPE_DEPTH => SG_SAMPLERTYPE_COMPARISON
 */
 sg_sampler_type :: enum u32 {
     DEFAULT;
@@ -2250,7 +2250,7 @@ sg_sampler_type :: enum u32 {
     sg_cube_face
 
     The cubemap faces. Use these as indices in the sg_image_desc.content
-    array
+    array.
 */
 sg_cube_face :: enum u32 {
     POS_X;
@@ -2268,7 +2268,7 @@ sg_cube_face :: enum u32 {
     APIs. This is used in the sg_pipeline_desc.primitive_type member when
     creating a pipeline object.
 
-    The default primitive type is SG_PRIMITIVETYPE_TRIANGLES
+    The default primitive type is SG_PRIMITIVETYPE_TRIANGLES.
 */
 sg_primitive_type :: enum u32 {
     DEFAULT;
@@ -2286,7 +2286,7 @@ sg_primitive_type :: enum u32 {
     used in the sg_sampler_desc.min_filter, sg_sampler_desc.mag_filter
     and sg_sampler_desc.mipmap_filter members when creating a sampler object.
 
-    For the default is SG_FILTER_NEAREST
+    For the default is SG_FILTER_NEAREST.
 */
 sg_filter :: enum u32 {
     DEFAULT;
@@ -2309,7 +2309,7 @@ sg_filter :: enum u32 {
     sg_features struct.
 
     Platforms which don't support SG_WRAP_CLAMP_TO_BORDER will silently fall back
-    to SG_WRAP_CLAMP_TO_EDGE without a validation error
+    to SG_WRAP_CLAMP_TO_EDGE without a validation error.
 */
 sg_wrap :: enum u32 {
     DEFAULT;
@@ -2325,7 +2325,7 @@ sg_wrap :: enum u32 {
     The border color to use when sampling a texture, and the UV wrap
     mode is SG_WRAP_CLAMP_TO_BORDER.
 
-    The default border color is SG_BORDERCOLOR_OPAQUE_BLAC
+    The default border color is SG_BORDERCOLOR_OPAQUE_BLACK
 */
 sg_border_color :: enum u32 {
     DEFAULT;
@@ -2338,7 +2338,7 @@ sg_border_color :: enum u32 {
     sg_vertex_format
 
     The data type of a vertex component. This is used to describe
-    the layout of vertex data when creating a pipeline object
+    the layout of vertex data when creating a pipeline object.
 */
 sg_vertex_format :: enum u32 {
     INVALID;
@@ -2370,7 +2370,7 @@ sg_vertex_format :: enum u32 {
     instanced-rendering.
 
     The vertex-step is part of the vertex-layout definition
-    when creating pipeline objects
+    when creating pipeline objects.
 */
 sg_vertex_step :: enum u32 {
     DEFAULT;
@@ -2384,7 +2384,7 @@ sg_vertex_step :: enum u32 {
     The data type of a uniform block member. This is used to
     describe the internal layout of uniform blocks when creating
     a shader object. This is only required for the GL backend, all
-    other backends will ignore the interior layout of uniform blocks
+    other backends will ignore the interior layout of uniform blocks.
 */
 sg_uniform_type :: enum u32 {
     INVALID;
@@ -2431,7 +2431,7 @@ sg_uniform_type :: enum u32 {
         of 16.
 
     For more information search for 'UNIFORM DATA LAYOUT' in the documentation block
-    at the start of the header
+    at the start of the header.
 */
 sg_uniform_layout :: enum u32 {
     DEFAULT;
@@ -2446,7 +2446,7 @@ sg_uniform_layout :: enum u32 {
     sg_pipeline_desc.cull_mode member when creating a
     pipeline object.
 
-    The default cull mode is SG_CULLMODE_NON
+    The default cull mode is SG_CULLMODE_NONE
 */
 sg_cull_mode :: enum u32 {
     DEFAULT;
@@ -2462,7 +2462,7 @@ sg_cull_mode :: enum u32 {
     is used in the member sg_pipeline_desc.face_winding
     when creating a pipeline object.
 
-    The default winding is SG_FACEWINDING_CW (clockwise
+    The default winding is SG_FACEWINDING_CW (clockwise)
 */
 sg_face_winding :: enum u32 {
     DEFAULT;
@@ -2492,7 +2492,7 @@ sg_face_winding :: enum u32 {
     The default compare func for depth- and stencil-tests is
     SG_COMPAREFUNC_ALWAYS.
 
-    The default compare func for samplers is SG_COMPAREFUNC_NEVER
+    The default compare func for samplers is SG_COMPAREFUNC_NEVER.
 */
 sg_compare_func :: enum u32 {
     DEFAULT;
@@ -2524,7 +2524,7 @@ sg_compare_func :: enum u32 {
                 .depth_fail_op
                 .pass_op
 
-    The default value is SG_STENCILOP_KEEP
+    The default value is SG_STENCILOP_KEEP.
 */
 sg_stencil_op :: enum u32 {
     DEFAULT;
@@ -2553,7 +2553,7 @@ sg_stencil_op :: enum u32 {
                 .dst_factor_alpha
 
     The default value is SG_BLENDFACTOR_ONE for source
-    factors, and SG_BLENDFACTOR_ZERO for destination factors
+    factors, and SG_BLENDFACTOR_ZERO for destination factors.
 */
 sg_blend_factor :: enum u32 {
     DEFAULT;
@@ -2587,7 +2587,7 @@ sg_blend_factor :: enum u32 {
                 .op_rgb
                 .op_alpha
 
-    The default value is SG_BLENDOP_ADD
+    The default value is SG_BLENDOP_ADD.
 */
 sg_blend_op :: enum u32 {
     DEFAULT;
@@ -2607,7 +2607,7 @@ sg_blend_op :: enum u32 {
 
     NOTE: since the color mask value 0 is reserved for the default value
     (SG_COLORMASK_RGBA), use SG_COLORMASK_NONE if all color channels
-    should be disabled
+    should be disabled.
 */
 sg_color_mask :: enum u32 {
     DEFAULT :: 0;
@@ -2645,7 +2645,7 @@ sg_color_mask :: enum u32 {
 
     If you want to override the default behaviour, it is important to not
     only set the clear color, but the 'action' field as well (as long as this
-    is _SG_LOADACTION_DEFAULT, the value fields will be ignored)
+    is _SG_LOADACTION_DEFAULT, the value fields will be ignored).
 */
 sg_load_action :: enum u32 {
     DEFAULT;
@@ -2660,7 +2660,7 @@ sg_load_action :: enum u32 {
     Defines the store action that should be performed at the end of a render pass:
 
     SG_STOREACTION_STORE:       store the rendered content to the color attachment image
-    SG_STOREACTION_DONTCARE:    allows the GPU to discard the rendered conten
+    SG_STOREACTION_DONTCARE:    allows the GPU to discard the rendered content
 */
 sg_store_action :: enum u32 {
     DEFAULT;
@@ -2912,7 +2912,7 @@ sg_sampler_desc :: struct {
     on demand. If this fails, shader creation will fail. When compiling HLSL
     source code, you can provide an optional target string via
     sg_shader_stage_desc.d3d11_target, the default target is "vs_4_0" for the
-    vertex shader stage and "ps_4_0" for the pixel shader stage
+    vertex shader stage and "ps_4_0" for the pixel shader stage.
 */
 sg_shader_stage :: enum u32 {
     NONE;

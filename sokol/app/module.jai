@@ -1470,7 +1470,7 @@ MAX_ICONIMAGES :: 8;
     The type of event that's passed to the event handler callback
     in the sapp_event.type field. These are not just "traditional"
     input events, but also notify the application about state changes
-    or other user-invoked actions
+    or other user-invoked actions.
 */
 sapp_event_type :: enum u32 {
     INVALID;
@@ -1505,7 +1505,7 @@ sapp_event_type :: enum u32 {
     The 'virtual keycode' of a KEY_DOWN or KEY_UP event in the
     struct field sapp_event.key_code.
 
-    Note that the keycode values are identical with GLFW
+    Note that the keycode values are identical with GLFW.
 */
 sapp_keycode :: enum u32 {
     INVALID :: 0;
@@ -1639,7 +1639,7 @@ sapp_keycode :: enum u32 {
     NOTE: the values must remain in sync with the corresponding
     Android SDK type, so don't change those.
 
-    See https://developer.android.com/reference/android/view/MotionEvent#TOOL_TYPE_UNKNOW
+    See https://developer.android.com/reference/android/view/MotionEvent#TOOL_TYPE_UNKNOWN
 */
 sapp_android_tooltype :: enum u32 {
     UNKNOWN :: 0;
@@ -1660,7 +1660,7 @@ sapp_touchpoint :: struct {
     sapp_mousebutton
 
     The currently pressed mouse button in the events MOUSE_DOWN
-    and MOUSE_UP, stored in the struct field sapp_event.mouse_button
+    and MOUSE_UP, stored in the struct field sapp_event.mouse_button.
 */
 sapp_mousebutton :: enum u32 {
     LEFT :: 0;
@@ -1877,7 +1877,7 @@ sapp_desc :: struct {
 
 /*
     HTML5 specific: request and response structs for
-      asynchronously loading dropped-file content
+      asynchronously loading dropped-file content.
 */
 sapp_html5_fetch_error :: enum u32 {
     FETCH_ERROR_NO_ERROR;
@@ -1904,7 +1904,7 @@ sapp_html5_fetch_request :: struct {
 /*
     sapp_mouse_cursor
 
-    Predefined cursor image definitions, set with sapp_set_mouse_cursor(sapp_mouse_cursor cursor
+    Predefined cursor image definitions, set with sapp_set_mouse_cursor(sapp_mouse_cursor cursor)
 */
 sapp_mouse_cursor :: enum u32 {
     DEFAULT :: 0;
