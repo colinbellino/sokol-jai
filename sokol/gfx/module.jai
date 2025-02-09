@@ -2553,7 +2553,9 @@ sg_stencil_op :: enum u32 {
                 .dst_factor_alpha
 
     The default value is SG_BLENDFACTOR_ONE for source
-    factors, and SG_BLENDFACTOR_ZERO for destination factors.
+    factors, and for the destination SG_BLENDFACTOR_ZERO if the associated
+    blend-op is ADD, SUBTRACT or REVERSE_SUBTRACT or SG_BLENDFACTOR_ONE
+    if the associated blend-op is MIN or MAX.
 */
 sg_blend_factor :: enum u32 {
     DEFAULT;
@@ -2594,6 +2596,8 @@ sg_blend_op :: enum u32 {
     ADD;
     SUBTRACT;
     REVERSE_SUBTRACT;
+    MIN;
+    MAX;
 }
 
 /*
@@ -3532,6 +3536,7 @@ sg_log_item :: enum u32 {
     VALIDATE_PIPELINEDESC_NO_CONT_ATTRS;
     VALIDATE_PIPELINEDESC_LAYOUT_STRIDE4;
     VALIDATE_PIPELINEDESC_ATTR_SEMANTICS;
+    VALIDATE_PIPELINEDESC_BLENDOP_MINMAX_REQUIRES_BLENDFACTOR_ONE;
     VALIDATE_ATTACHMENTSDESC_CANARY;
     VALIDATE_ATTACHMENTSDESC_NO_ATTACHMENTS;
     VALIDATE_ATTACHMENTSDESC_NO_CONT_COLOR_ATTS;
