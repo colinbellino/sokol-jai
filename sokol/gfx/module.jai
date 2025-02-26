@@ -1709,6 +1709,7 @@ sg_apply_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
 sg_apply_bindings :: (bindings: *sg_bindings) -> void #foreign sokol_gfx_clib;
 sg_apply_uniforms :: (ub_slot: s32, data: *sg_range) -> void #foreign sokol_gfx_clib;
 sg_draw :: (base_element: s32, num_elements: s32, num_instances: s32) -> void #foreign sokol_gfx_clib;
+sg_dispatch :: (num_groups_x: s32, num_groups_y: s32, num_groups_z: s32) -> void #foreign sokol_gfx_clib;
 sg_end_pass :: () -> void #foreign sokol_gfx_clib;
 sg_commit :: () -> void #foreign sokol_gfx_clib;
 // getting information
@@ -1813,8 +1814,10 @@ sg_d3d11_query_pipeline_info :: (pip: sg_pipeline) -> sg_d3d11_pipeline_info #fo
 sg_d3d11_query_attachments_info :: (atts: sg_attachments) -> sg_d3d11_attachments_info #foreign sokol_gfx_clib;
 // Metal: return __bridge-casted MTLDevice
 sg_mtl_device :: () -> *void #foreign sokol_gfx_clib;
-// Metal: return __bridge-casted MTLRenderCommandEncoder in current pass (or zero if outside pass)
+// Metal: return __bridge-casted MTLRenderCommandEncoder when inside render pass (otherwise zero)
 sg_mtl_render_command_encoder :: () -> *void #foreign sokol_gfx_clib;
+// Metal: return __bridge-casted MTLComputeCommandEncoder when inside compute pass (otherwise zero)
+sg_mtl_compute_command_encoder :: () -> *void #foreign sokol_gfx_clib;
 // Metal: get internal __bridge-casted buffer resource objects
 sg_mtl_query_buffer_info :: (buf: sg_buffer) -> sg_mtl_buffer_info #foreign sokol_gfx_clib;
 // Metal: get internal __bridge-casted image resource objects
@@ -1831,8 +1834,10 @@ sg_wgpu_device :: () -> *void #foreign sokol_gfx_clib;
 sg_wgpu_queue :: () -> *void #foreign sokol_gfx_clib;
 // WebGPU: return this frame's WGPUCommandEncoder
 sg_wgpu_command_encoder :: () -> *void #foreign sokol_gfx_clib;
-// WebGPU: return WGPURenderPassEncoder of current pass
+// WebGPU: return WGPURenderPassEncoder of current pass (returns 0 when outside pass or in a compute pass)
 sg_wgpu_render_pass_encoder :: () -> *void #foreign sokol_gfx_clib;
+// WebGPU: return WGPUComputePassEncoder of current pass (returns 0 when outside pass or in a render pass)
+sg_wgpu_compute_pass_encoder :: () -> *void #foreign sokol_gfx_clib;
 // WebGPU: get internal buffer resource objects
 sg_wgpu_query_buffer_info :: (buf: sg_buffer) -> sg_wgpu_buffer_info #foreign sokol_gfx_clib;
 // WebGPU: get internal image resource objects
@@ -2052,7 +2057,7 @@ sg_features :: struct {
     image_clamp_to_border : bool;
     mrt_independent_blend_state : bool;
     mrt_independent_write_mask : bool;
-    storage_buffer : bool;
+    compute : bool;
     msaa_image_bindings : bool;
 }
 
@@ -2728,6 +2733,7 @@ sg_swapchain :: struct {
 
 sg_pass :: struct {
     _ : u32;
+    compute : bool;
     action : sg_pass_action;
     attachments : sg_attachments;
     swapchain : sg_swapchain;
@@ -2918,6 +2924,7 @@ sg_shader_stage :: enum u32 {
     NONE;
     VERTEX;
     FRAGMENT;
+    COMPUTE;
 }
 
 sg_shader_function :: struct {
@@ -2971,6 +2978,7 @@ sg_shader_storage_buffer :: struct {
     stage : sg_shader_stage;
     readonly : bool;
     hlsl_register_t_n : u8;
+    hlsl_register_u_n : u8;
     msl_buffer_n : u8;
     wgsl_group1_binding_n : u8;
     glsl_binding_n : u8;
@@ -2983,16 +2991,24 @@ sg_shader_image_sampler_pair :: struct {
     glsl_name : *u8;
 }
 
+sg_mtl_shader_threads_per_threadgroup :: struct {
+    x : s32;
+    y : s32;
+    z : s32;
+}
+
 sg_shader_desc :: struct {
     _ : u32;
     vertex_func : sg_shader_function;
     fragment_func : sg_shader_function;
+    compute_func : sg_shader_function;
     attrs : [16]sg_shader_vertex_attr;
     uniform_blocks : [8]sg_shader_uniform_block;
     storage_buffers : [8]sg_shader_storage_buffer;
     images : [16]sg_shader_image;
     samplers : [16]sg_shader_sampler;
     image_sampler_pairs : [16]sg_shader_image_sampler_pair;
+    mtl_threads_per_threadgroup : sg_mtl_shader_threads_per_threadgroup;
     label : *u8;
     _ : u32;
 }
@@ -3057,6 +3073,7 @@ sg_color_target_state :: struct {
 
 sg_pipeline_desc :: struct {
     _ : u32;
+    compute : bool;
     shader : sg_shader;
     layout : sg_vertex_layout_state;
     depth : sg_depth_state;
@@ -3114,6 +3131,7 @@ sg_trace_hooks :: struct {
     apply_bindings : (a0: *sg_bindings, a1: *void) #c_call;
     apply_uniforms : (a0: s32, a1: *sg_range, a2: *void) #c_call;
     draw : (a0: s32, a1: s32, a2: s32, a3: *void) #c_call;
+    dispatch : (a0: s32, a1: s32, a2: s32, a3: *void) #c_call;
     end_pass : (a0: *void) #c_call;
     commit : (a0: *void) #c_call;
     alloc_buffer : (a0: sg_buffer, a1: *void) #c_call;
@@ -3200,6 +3218,7 @@ sg_frame_stats_gl :: struct {
     num_enable_vertex_attrib_array : u32;
     num_disable_vertex_attrib_array : u32;
     num_uniform : u32;
+    num_memory_barriers : u32;
 }
 
 sg_frame_stats_d3d11_pass :: struct {
@@ -3219,15 +3238,20 @@ sg_frame_stats_d3d11_pipeline :: struct {
     num_vs_set_constant_buffers : u32;
     num_ps_set_shader : u32;
     num_ps_set_constant_buffers : u32;
+    num_cs_set_shader : u32;
+    num_cs_set_constant_buffers : u32;
 }
 
 sg_frame_stats_d3d11_bindings :: struct {
     num_ia_set_vertex_buffers : u32;
     num_ia_set_index_buffer : u32;
     num_vs_set_shader_resources : u32;
-    num_ps_set_shader_resources : u32;
     num_vs_set_samplers : u32;
+    num_ps_set_shader_resources : u32;
     num_ps_set_samplers : u32;
+    num_cs_set_shader_resources : u32;
+    num_cs_set_samplers : u32;
+    num_cs_set_unordered_access_views : u32;
 }
 
 sg_frame_stats_d3d11_uniforms :: struct {
@@ -3274,11 +3298,15 @@ sg_frame_stats_metal_bindings :: struct {
     num_set_fragment_buffer : u32;
     num_set_fragment_texture : u32;
     num_set_fragment_sampler_state : u32;
+    num_set_compute_buffer : u32;
+    num_set_compute_texture : u32;
+    num_set_compute_sampler_state : u32;
 }
 
 sg_frame_stats_metal_uniforms :: struct {
     num_set_vertex_buffer_offset : u32;
     num_set_fragment_buffer_offset : u32;
+    num_set_compute_buffer_offset : u32;
 }
 
 sg_frame_stats_metal :: struct {
@@ -3323,6 +3351,7 @@ sg_frame_stats :: struct {
     num_apply_bindings : u32;
     num_apply_uniforms : u32;
     num_draw : u32;
+    num_dispatch : u32;
     num_update_buffer : u32;
     num_append_buffer : u32;
     num_update_image : u32;
@@ -3356,6 +3385,7 @@ sg_log_item :: enum u32 {
     GL_FRAMEBUFFER_STATUS_UNKNOWN;
     D3D11_CREATE_BUFFER_FAILED;
     D3D11_CREATE_BUFFER_SRV_FAILED;
+    D3D11_CREATE_BUFFER_UAV_FAILED;
     D3D11_CREATE_DEPTH_TEXTURE_UNSUPPORTED_PIXEL_FORMAT;
     D3D11_CREATE_DEPTH_TEXTURE_FAILED;
     D3D11_CREATE_2D_TEXTURE_UNSUPPORTED_PIXEL_FORMAT;
@@ -3368,6 +3398,7 @@ sg_log_item :: enum u32 {
     D3D11_CREATE_SAMPLER_STATE_FAILED;
     D3D11_UNIFORMBLOCK_HLSL_REGISTER_B_OUT_OF_RANGE;
     D3D11_STORAGEBUFFER_HLSL_REGISTER_T_OUT_OF_RANGE;
+    D3D11_STORAGEBUFFER_HLSL_REGISTER_U_OUT_OF_RANGE;
     D3D11_IMAGE_HLSL_REGISTER_T_OUT_OF_RANGE;
     D3D11_SAMPLER_HLSL_REGISTER_S_OUT_OF_RANGE;
     D3D11_LOAD_D3DCOMPILER_47_DLL_FAILED;
@@ -3395,6 +3426,8 @@ sg_log_item :: enum u32 {
     METAL_STORAGEBUFFER_MSL_BUFFER_SLOT_OUT_OF_RANGE;
     METAL_IMAGE_MSL_TEXTURE_SLOT_OUT_OF_RANGE;
     METAL_SAMPLER_MSL_SAMPLER_SLOT_OUT_OF_RANGE;
+    METAL_CREATE_CPS_FAILED;
+    METAL_CREATE_CPS_OUTPUT;
     METAL_CREATE_RPS_FAILED;
     METAL_CREATE_RPS_OUTPUT;
     METAL_CREATE_DSS_FAILED;
@@ -3414,8 +3447,8 @@ sg_log_item :: enum u32 {
     WGPU_SAMPLER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     WGPU_CREATE_PIPELINE_LAYOUT_FAILED;
     WGPU_CREATE_RENDER_PIPELINE_FAILED;
+    WGPU_CREATE_COMPUTE_PIPELINE_FAILED;
     WGPU_ATTACHMENTS_CREATE_TEXTURE_VIEW_FAILED;
-    DRAW_REQUIRED_BINDINGS_OR_UNIFORMS_MISSING;
     IDENTICAL_COMMIT_LISTENER;
     COMMIT_LISTENER_ARRAY_FULL;
     TRACE_HOOKS_NOT_ENABLED;
@@ -3450,12 +3483,13 @@ sg_log_item :: enum u32 {
     PIPELINE_POOL_EXHAUSTED;
     PASS_POOL_EXHAUSTED;
     BEGINPASS_ATTACHMENT_INVALID;
+    APPLY_BINDINGS_STORAGE_BUFFER_TRACKER_EXHAUSTED;
     DRAW_WITHOUT_BINDINGS;
     VALIDATE_BUFFERDESC_CANARY;
-    VALIDATE_BUFFERDESC_SIZE;
-    VALIDATE_BUFFERDESC_DATA;
-    VALIDATE_BUFFERDESC_DATA_SIZE;
-    VALIDATE_BUFFERDESC_NO_DATA;
+    VALIDATE_BUFFERDESC_EXPECT_NONZERO_SIZE;
+    VALIDATE_BUFFERDESC_EXPECT_MATCHING_DATA_SIZE;
+    VALIDATE_BUFFERDESC_EXPECT_ZERO_DATA_SIZE;
+    VALIDATE_BUFFERDESC_EXPECT_NO_DATA;
     VALIDATE_BUFFERDESC_STORAGEBUFFER_SUPPORTED;
     VALIDATE_BUFFERDESC_STORAGEBUFFER_SIZE_MULTIPLE_4;
     VALIDATE_IMAGEDATA_NODATA;
@@ -3479,10 +3513,15 @@ sg_log_item :: enum u32 {
     VALIDATE_SAMPLERDESC_CANARY;
     VALIDATE_SAMPLERDESC_ANISTROPIC_REQUIRES_LINEAR_FILTERING;
     VALIDATE_SHADERDESC_CANARY;
-    VALIDATE_SHADERDESC_SOURCE;
-    VALIDATE_SHADERDESC_BYTECODE;
-    VALIDATE_SHADERDESC_SOURCE_OR_BYTECODE;
+    VALIDATE_SHADERDESC_VERTEX_SOURCE;
+    VALIDATE_SHADERDESC_FRAGMENT_SOURCE;
+    VALIDATE_SHADERDESC_COMPUTE_SOURCE;
+    VALIDATE_SHADERDESC_VERTEX_SOURCE_OR_BYTECODE;
+    VALIDATE_SHADERDESC_FRAGMENT_SOURCE_OR_BYTECODE;
+    VALIDATE_SHADERDESC_COMPUTE_SOURCE_OR_BYTECODE;
+    VALIDATE_SHADERDESC_INVALID_SHADER_COMBO;
     VALIDATE_SHADERDESC_NO_BYTECODE_SIZE;
+    VALIDATE_SHADERDESC_METAL_THREADS_PER_THREADGROUP;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_NO_CONT_MEMBERS;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_SIZE_IS_ZERO;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_METAL_BUFFER_SLOT_OUT_OF_RANGE;
@@ -3500,11 +3539,12 @@ sg_log_item :: enum u32 {
     VALIDATE_SHADERDESC_STORAGEBUFFER_METAL_BUFFER_SLOT_COLLISION;
     VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_T_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_T_COLLISION;
+    VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_U_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_U_COLLISION;
     VALIDATE_SHADERDESC_STORAGEBUFFER_GLSL_BINDING_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_STORAGEBUFFER_GLSL_BINDING_COLLISION;
     VALIDATE_SHADERDESC_STORAGEBUFFER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_STORAGEBUFFER_WGSL_GROUP1_BINDING_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_READONLY;
     VALIDATE_SHADERDESC_IMAGE_METAL_TEXTURE_SLOT_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_IMAGE_METAL_TEXTURE_SLOT_COLLISION;
     VALIDATE_SHADERDESC_IMAGE_HLSL_REGISTER_T_OUT_OF_RANGE;
@@ -3529,9 +3569,12 @@ sg_log_item :: enum u32 {
     VALIDATE_SHADERDESC_ATTR_STRING_TOO_LONG;
     VALIDATE_PIPELINEDESC_CANARY;
     VALIDATE_PIPELINEDESC_SHADER;
+    VALIDATE_PIPELINEDESC_COMPUTE_SHADER_EXPECTED;
+    VALIDATE_PIPELINEDESC_NO_COMPUTE_SHADER_EXPECTED;
     VALIDATE_PIPELINEDESC_NO_CONT_ATTRS;
     VALIDATE_PIPELINEDESC_LAYOUT_STRIDE4;
     VALIDATE_PIPELINEDESC_ATTR_SEMANTICS;
+    VALIDATE_PIPELINEDESC_SHADER_READONLY_STORAGEBUFFERS;
     VALIDATE_PIPELINEDESC_BLENDOP_MINMAX_REQUIRES_BLENDFACTOR_ONE;
     VALIDATE_ATTACHMENTSDESC_CANARY;
     VALIDATE_ATTACHMENTSDESC_NO_ATTACHMENTS;
@@ -3565,6 +3608,7 @@ sg_log_item :: enum u32 {
     VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_SIZES;
     VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_SAMPLE_COUNT;
     VALIDATE_BEGINPASS_CANARY;
+    VALIDATE_BEGINPASS_EXPECT_NO_ATTACHMENTS;
     VALIDATE_BEGINPASS_ATTACHMENTS_EXISTS;
     VALIDATE_BEGINPASS_ATTACHMENTS_VALID;
     VALIDATE_BEGINPASS_COLOR_ATTACHMENT_IMAGE;
@@ -3598,20 +3642,28 @@ sg_log_item :: enum u32 {
     VALIDATE_BEGINPASS_SWAPCHAIN_WGPU_EXPECT_DEPTHSTENCILVIEW;
     VALIDATE_BEGINPASS_SWAPCHAIN_WGPU_EXPECT_DEPTHSTENCILVIEW_NOTSET;
     VALIDATE_BEGINPASS_SWAPCHAIN_GL_EXPECT_FRAMEBUFFER_NOTSET;
+    VALIDATE_AVP_RENDERPASS_EXPECTED;
+    VALIDATE_ASR_RENDERPASS_EXPECTED;
     VALIDATE_APIP_PIPELINE_VALID_ID;
     VALIDATE_APIP_PIPELINE_EXISTS;
     VALIDATE_APIP_PIPELINE_VALID;
+    VALIDATE_APIP_PASS_EXPECTED;
     VALIDATE_APIP_SHADER_EXISTS;
     VALIDATE_APIP_SHADER_VALID;
+    VALIDATE_APIP_COMPUTEPASS_EXPECTED;
+    VALIDATE_APIP_RENDERPASS_EXPECTED;
     VALIDATE_APIP_CURPASS_ATTACHMENTS_EXISTS;
     VALIDATE_APIP_CURPASS_ATTACHMENTS_VALID;
     VALIDATE_APIP_ATT_COUNT;
     VALIDATE_APIP_COLOR_FORMAT;
     VALIDATE_APIP_DEPTH_FORMAT;
     VALIDATE_APIP_SAMPLE_COUNT;
+    VALIDATE_ABND_PASS_EXPECTED;
     VALIDATE_ABND_PIPELINE;
     VALIDATE_ABND_PIPELINE_EXISTS;
     VALIDATE_ABND_PIPELINE_VALID;
+    VALIDATE_ABND_COMPUTE_EXPECTED_NO_VBS;
+    VALIDATE_ABND_COMPUTE_EXPECTED_NO_IB;
     VALIDATE_ABND_EXPECTED_VB;
     VALIDATE_ABND_VB_EXISTS;
     VALIDATE_ABND_VB_TYPE;
@@ -3636,9 +3688,20 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_EXPECTED_STORAGEBUFFER_BINDING;
     VALIDATE_ABND_STORAGEBUFFER_EXISTS;
     VALIDATE_ABND_STORAGEBUFFER_BINDING_BUFFERTYPE;
-    VALIDATE_AUB_NO_PIPELINE;
-    VALIDATE_AUB_NO_UNIFORMBLOCK_AT_SLOT;
-    VALIDATE_AUB_SIZE;
+    VALIDATE_AU_PASS_EXPECTED;
+    VALIDATE_AU_NO_PIPELINE;
+    VALIDATE_AU_NO_UNIFORMBLOCK_AT_SLOT;
+    VALIDATE_AU_SIZE;
+    VALIDATE_DRAW_RENDERPASS_EXPECTED;
+    VALIDATE_DRAW_BASEELEMENT;
+    VALIDATE_DRAW_NUMELEMENTS;
+    VALIDATE_DRAW_NUMINSTANCES;
+    VALIDATE_DRAW_REQUIRED_BINDINGS_OR_UNIFORMS_MISSING;
+    VALIDATE_DISPATCH_COMPUTEPASS_EXPECTED;
+    VALIDATE_DISPATCH_NUMGROUPSX;
+    VALIDATE_DISPATCH_NUMGROUPSY;
+    VALIDATE_DISPATCH_NUMGROUPSZ;
+    VALIDATE_DISPATCH_REQUIRED_BINDINGS_OR_UNIFORMS_MISSING;
     VALIDATE_UPDATEBUF_USAGE;
     VALIDATE_UPDATEBUF_SIZE;
     VALIDATE_UPDATEBUF_ONCE;
@@ -3702,6 +3765,7 @@ sg_desc :: struct {
     pipeline_pool_size : s32;
     attachments_pool_size : s32;
     uniform_buffer_size : s32;
+    max_dispatch_calls_per_pass : s32;
     max_commit_listeners : s32;
     disable_validation : bool;
     d3d11_shader_debugging : bool;
@@ -3795,7 +3859,8 @@ sg_wgpu_shader_info :: struct {
 }
 
 sg_wgpu_pipeline_info :: struct {
-    pip : *void;
+    render_pipeline : *void;
+    compute_pipeline : *void;
 }
 
 sg_wgpu_attachments_info :: struct {
