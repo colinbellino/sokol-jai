@@ -54,7 +54,7 @@ init :: () #c_call {
 
     // a render pass with one color- and one depth-attachment image
     img_desc := sg_image_desc.{
-        render_target = true,
+        usage = .{ render_attachment = true },
         width = 256,
         height = 256,
         pixel_format = .RGBA8,
