@@ -40,6 +40,7 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
     jai ../examples/first.jai - saudio
     jai ../examples/first.jai - fontstash-sapp
     jai ../examples/first.jai - sgl-context-sapp
+    jai ../examples/first.jai - cube-sapp
     ```
 
     By default, the backend 3D API will be selected based on the target platform:
