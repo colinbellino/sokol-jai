@@ -112,7 +112,7 @@
             });
 
     --- create resource objects (at least buffers, shaders and pipelines,
-        and optionally images, samplers and render-pass-attachments):
+        and optionally images, samplers and render/compute-pass-attachments):
 
             sg_buffer sg_make_buffer(const sg_buffer_desc*)
             sg_image sg_make_image(const sg_image_desc*)
@@ -146,17 +146,22 @@
 
             sg_begin_pass(&(sg_pass){ .compute = true });
 
+        If the compute pass writes into storage images, provide those as
+        'storage attachments' via an sg_attachments object:
+
+            sg_begin_pass(&(sg_pass){ .compute = true, .attachments = attattachments });
+
     --- set the pipeline state for the next draw call with:
 
             sg_apply_pipeline(sg_pipeline pip)
 
     --- fill an sg_bindings struct with the resource bindings for the next
         draw- or dispatch-call (0..N vertex buffers, 0 or 1 index buffer, 0..N images,
-        samplers and storage-buffers), and call:
+        samplers and storage-buffers), and call
 
             sg_apply_bindings(const sg_bindings* bindings)
 
-        to update the resource bindings. Note that in a compute pass, no vertex-
+        ...to update the resource bindings. Note that in a compute pass, no vertex-
         or index-buffer bindings are allowed and will be rejected by the validation
         layer.
 
@@ -237,7 +242,7 @@
             sg_update_image(sg_image img, const sg_image_data* data)
 
         Buffers and images to be updated must have been created with
-        SG_USAGE_DYNAMIC or SG_USAGE_STREAM.
+        sg_buffer_desc.usage.dynamic_update or .stream_update.
 
         Only one update per frame is allowed for buffer and image resources when
         using the sg_update_*() functions. The rationale is to have a simple
@@ -276,7 +281,7 @@
         }
 
         A buffer to be used with sg_append_buffer() must have been created
-        with SG_USAGE_DYNAMIC or SG_USAGE_STREAM.
+        with sg_buffer_desc.usage.dynamic_update or .stream_update.
 
         If the application appends more data to the buffer then fits into
         the buffer, the buffer will go into the "overflow" state for the
@@ -700,10 +705,11 @@
 
     ON COMPUTE PASSES
     =================
-    Compute passes are used to update the content of storage resources
-    (currently only storage buffers) by running compute shader code on
-    the GPU. This will almost always be more efficient than computing
-    that same data on the CPU and uploading the data via `sg_update_buffer()`.
+    Compute passes are used to update the content of storage buffers and
+    storage images by running compute shader code on
+    the GPU. Updating storage resources with a compute shader will almost always
+    be more efficient than computing the same data on the CPU and then uploading
+    it via `sg_update_buffer()` or `sg_update_image()`.
 
     NOTE: compute passes are only supported on the following platforms and
     backends:
@@ -722,33 +728,49 @@
         - iOS with GLES3
         - Web with WebGL2
 
-    A compute pass is started with:
+    A compute pass which only updates storage buffers is started with:
 
         sg_begin_pass(&(sg_pass){ .compute = true });
 
-    ...and finished with:
+    ...if the compute pass updates storage images, the images must be 'bound'
+    via an sg_attachments object:
+
+        sg_begin_pass(&(sg_pass){ .compute = true, .attachments = attachments });
+
+    Image objects in such a compute pass attachments object must be created with
+    `storage_attachment` usage:
+
+        sg_image storage_image = sg_make_image(&(sg_image_desc){
+            .usage = {
+                .storage_attachment = true,
+            },
+            // ...
+        });
+
+    ...a compute pass is finished with a regular:
 
         sg_end_pass();
 
     Typically the following functions will be called inside a compute pass:
 
-        sg_apply_pipeline
-        sg_apply_bindings
-        sg_apply_uniforms
-        sg_dispatch
+        sg_apply_pipeline()
+        sg_apply_bindings()
+        sg_apply_uniforms()
+        sg_dispatch()
 
     The following functions are disallowed inside a compute pass
     and will cause validation layer errors:
 
-        sg_apply_viewport[f]
-        sg_apply_scissor_rect[f]
-        sg_draw
+        sg_apply_viewport[f]()
+        sg_apply_scissor_rect[f]()
+        sg_draw()
 
     Only special 'compute shaders' and 'compute pipelines' can be used in
     compute passes. A compute shader only has a compute-function instead
     of a vertex- and fragment-function pair, and it doesn't accept vertex-
-    and index-buffers as input, only storage-buffers, textures and non-filtering
-    samplers (more details on compute shaders in the following section).
+    and index-buffers as input, only storage-buffers, textures, non-filtering
+    samplers and images via storage attachments (more details on compute shaders in
+    the following section).
 
     A compute pipeline is created by providing a compute shader object,
     setting the .compute creation parameter to true and not defining any
@@ -772,6 +794,7 @@
 
         - https://floooh.github.io/sokol-webgpu/instancing-compute-sapp.html
         - https://floooh.github.io/sokol-webgpu/computeboids-sapp.html
+        - https://floooh.github.io/sokol-webgpu/imageblur-sapp.html
 
 
     ON SHADER CREATION
@@ -785,7 +808,8 @@
     The easiest way to provide all this shader creation data is to use the
     sokol-shdc shader compiler tool to compile shaders from a common
     GLSL syntax into backend-specific sources or binary blobs, along with
-    shader interface information and uniform blocks mapped to C structs.
+    shader interface information and uniform blocks and storage buffer array items
+    mapped to C structs.
 
     To create a shader using a C header which has been code-generated by sokol-shdc:
 
@@ -814,7 +838,9 @@
         - for the desktop GL backend, source code can be provided in '#version 410' or
           '#version 430', version 430 is required when using storage buffers and
           compute shaders support, but note that this is not available on macOS
-        - for the GLES3 backend, source code must be provided in '#version 300 es' syntax
+        - for the GLES3 backend, source code must be provided in '#version 300 es' or
+          '#version 310 es' syntax (version 310 is required for storage buffer and
+          compute shader support, but note that this is not supported on WebGL2)
         - for the D3D11 backend, shaders can be provided as source or binary
           blobs, the source code should be in HLSL4.0 (for compatibility with old
           low-end GPUs) or preferably in HLSL5.0 syntax, note that when
@@ -861,7 +887,7 @@
             .mtl_threads_per_threadgroup = { .x = 64, .y = 1, .z = 1 },
         }
 
-    - Information about each uniform block used in the shader:
+    - Information about each uniform block binding used in the shader:
         - the shader stage of the uniform block (vertex, fragment or compute)
         - the size of the uniform block in number of bytes
         - a memory layout hint (currently 'native' or 'std140') where 'native' defines a
@@ -877,7 +903,7 @@
         - please also NOTE the documentation sections about UNIFORM DATA LAYOUT
           and CROSS-BACKEND COMMON UNIFORM DATA LAYOUT below!
 
-    - A description of each storage buffer used in the shader:
+    - A description of each storage buffer binding used in the shader:
         - the shader stage of the storage buffer
         - a boolean 'readonly' flag, this is used for validation and hazard
           tracking in some 3D backends. Note that in render passes, only
@@ -891,15 +917,41 @@
                   buffers and textures share the same bind space for
                   'shader resource views')
                 - for read/write storage buffer buffer bindings: the UAV register N
-                  (`register(uN)`) where N is 0..7 (in HLSL, readwrite storage
+                  (`register(uN)`) where N is 0..11 (in HLSL, readwrite storage
                   buffers use their own bind space for 'unordered access views')
             - Metal/MSL: the buffer bind slot N (`[[buffer(N)]]`) where N is 8..15
             - WebGPU/WGSL: the binding N in `@group(0) @binding(N)` where N is 0..127
             - GL/GLSL: the buffer binding N in `layout(binding=N)` where N is 0..7
-        - note that storage buffers are not supported on all backends
+        - note that storage buffer bindings are not supported on all backends
           and platforms
 
-    - A description of each texture/image used in the shader:
+    - A description of each storage image binding used in the shader (only supported
+      in compute shaders):
+        - the shader stage (*must* be compute)
+        - the expected image type:
+            - SG_IMAGETYPE_2D
+            - SG_IMAGETYPE_CUBE
+            - SG_IMAGETYPE_3D
+            - SG_IMAGETYPE_ARRAY
+        - the 'access pixel format', this is currently limited to:
+            - SG_PIXELFORMAT_RGBA8
+            - SG_PIXELFORMAT_RGBA8SN/UI/SI
+            - SG_PIXELFORMAT_RGBA16UI/SI/F
+            - SG_PIXELFORMAT_R32UIUI/SI/F
+            - SG_PIXELFORMAT_RG32UI/SI/F
+            - SG_PIXELFORMAT_RGBA32UI/SI/F
+        - the access type (readwrite or writeonly)
+        - a backend-specific bind slot:
+            - D3D11/HLSL: the UAV register N (`register(uN)` where N is 0..11, the
+              bind slot must not collide with UAV storage buffer bindings
+            - Metal/MSL: the texture bind slot N (`[[texture(N)]])` where N is 0..19,
+              the bind slot must not collide with other texture bindings on the same
+              stage
+            - WebGPU/WGSL: the binding N in `@group(2) @binding(N)` where N is 0..3
+            - GL/GLSL: the buffer binding N in `layout(binding=N)` where N is 0..3
+        - note that storage image bindings are not supported on all backends and platforms
+
+    - A description of each texture binding used in the shader:
         - the shader stage of the texture (vertex, fragment or compute)
         - the expected image type:
             - SG_IMAGETYPE_2D
@@ -916,7 +968,8 @@
         - a backend-specific bind slot:
             - D3D11/HLSL: the texture register N (`register(tN)`) where N is 0..23
               (in HLSL, readonly storage buffers and texture share the same bind space)
-            - Metal/MSL: the texture bind slot N (`[[texture(N)]]`) where N is 0..15
+            - Metal/MSL: the texture bind slot N (`[[texture(N)]]`) where N is 0..19
+              (the bind slot must not collide with storage image bindings on the same stage)
             - WebGPU/WGSL: the binding N in `@group(0) @binding(N)` where N is 0..127
 
     - A description of each sampler used in the shader:
@@ -951,24 +1004,26 @@
 
         - D3D11/HLSL:
             - separate bindslot space per shader stage
-            - uniform blocks (as cbuffer): `register(b0..b7)`
-            - textures and readonly storage buffers: `register(t0..t23)`
-            - read/write storage buffers: `register(u0..u7)`
+            - uniform block bindings (as cbuffer): `register(b0..b7)`
+            - texture- and readonly storage buffer bindings: `register(t0..t23)`
+            - read/write storage buffer and storage image bindings: `register(u0..u11)`
             - samplers: `register(s0..s15)`
         - Metal/MSL:
             - separate bindslot space per shader stage
             - uniform blocks: `[[buffer(0..7)]]`
             - storage buffers: `[[buffer(8..15)]]`
-            - textures: `[[texture(0..15)]]`
+            - textures and storage image bindings: `[[texture(0..19)]]`
             - samplers: `[[sampler(0..15)]]`
         - WebGPU/WGSL:
             - common bindslot space across shader stages
             - uniform blocks: `@group(0) @binding(0..15)`
             - textures, samplers and storage buffers: `@group(1) @binding(0..127)`
+            - storage image bindings: `@group(2) @binding(0..3)`
         - GL/GLSL:
             - uniforms and image-samplers are bound by name
-            - storage buffers: `layout(std430, binding=0..7)` (common
+            - storage buffer bindings: `layout(std430, binding=0..7)` (common
               bindslot space across shader stages)
+            - storage image bindings: `layout(binding=0..3, [access_format])`
 
     For example code of how to create backend-specific shader objects,
     please refer to the following samples:
@@ -1192,7 +1247,7 @@
           can only read from storage buffers, while compute-shaders can both read
           and write storage buffers)
         - create one or more storage buffers via sg_make_buffer() with the
-          buffer type SG_BUFFERTYPE_STORAGEBUFFER
+          `.usage.storage_buffer = true`
         - when creating a shader via sg_make_shader(), populate the sg_shader_desc
           struct with binding info (when using sokol-shdc, this step will be taken care
           of automatically)
@@ -1303,8 +1358,8 @@
               (https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-object-rwbyteaddressbuffer)
             - readonly-storage buffers and textures are both bound as 'shader-resource-view' and
               share the same bind slots (declared as `register(tN)` in HLSL), where N must be in the range 0..23)
-            - read/write storage buffers are bound as 'unordered-access-view' (declared as `register(uN)` in HLSL
-              where N is in the range 0..7)
+            - read/write storage buffers and storage images are bound as 'unordered-access-view'
+              (declared as `register(uN)` in HLSL where N is in the range 0..11)
 
         Metal:
             - in Metal there is no internal difference between vertex-, uniform- and
@@ -1331,6 +1386,53 @@
 
               `@group(1) @binding(0..127)
 
+    ON STORAGE IMAGES:
+    ==================
+    To write pixel data to texture objects in compute shaders, first an image
+    object must be created with `storage_attachment usage`:
+
+        sg_image storage_image = sg_make_image(&(sg_image_desc){
+            .usage = {
+                .storage_attachment = true,
+            },
+            .width = ...,
+            .height = ...,
+            .pixel_format = ...,
+        });
+
+    ...next the image object must be wrapped in an attachment object, this allows
+    to pick a specific mipmap level or slice to be accessed by the compute shader:
+
+        sg_attachments storage_attachment = sg_make_attachment(&(sg_attachments_desc){
+            .storages[0] = {
+                .image = storage_image,
+                .mip_level = ...,
+                .slice = ...,
+            },
+        });
+
+    Finally 'bind' the storage image as pass attachment in the `sg_begin_pass`
+    call of a compute pass:
+
+        sg_begin_pass(&(sg_pass){ .compute = true, .attachments = storage_attachments });
+        ...
+        sg_end_pass();
+
+    Storage attachments should only be accessed as `readwrite` or `writeonly` mode
+    in compute shaders because if the limited bind space of up to 4 slots. For
+    readonly access, just bind the storage image as regular texture via
+    `sg_apply_bindings()`.
+
+    For an example of using storage images in compute shaders see imageblur-sapp:
+
+        - C code: https://github.com/floooh/sokol-samples/blob/master/sapp/imageblur-sapp.c
+        - shader: https://github.com/floooh/sokol-samples/blob/master/sapp/imageblur-sapp.glsl
+
+    NOTE: in the (hopefully not-too-distant) future, working with storage
+    images will change by moving the resource binding from pass attachments to
+    regular bindings via `sg_apply_bindings()`, but this requires the
+    introduction of resource view objects into sokol-gfx (see planning
+    ticket: https://github.com/floooh/sokol/issues/1252)
 
     TRACE HOOKS:
     ============
@@ -1664,6 +1766,11 @@
       bindings must be in the range 0..127:
 
         @group(1) @binding(0..127)
+
+      All storage image attachments must use `@group(2)` and bindings
+      must be in the range 0..3:
+
+        @group(2) @binding(0..3)
 
       Note that the number of texture, sampler and storage buffer bindings
       is still limited despite the large bind range:
@@ -2954,7 +3061,7 @@ sg_sampler_desc :: struct {
     reflection information to sokol-gfx.
 
     If you use sokol-shdc you can ignore the following information since
-    the sg_shader_desc struct will be code generated.
+    the sg_shader_desc struct will be code-generated.
 
     Otherwise you need to provide the following information to the
     sg_make_shader() call:
@@ -2989,7 +3096,7 @@ sg_sampler_desc :: struct {
             - WGSL: `@workgroup_size(x, y, z)`
           ...but in Metal the workgroup size is declared on the CPU side
 
-    - reflection information for each uniform block used by the shader:
+    - reflection information for each uniform block binding used by the shader:
         - the shader stage the uniform block appears in (SG_SHADERSTAGE_*)
         - the size in bytes of the uniform block
         - backend-specific bindslots:
@@ -3003,14 +3110,14 @@ sg_sampler_desc :: struct {
                 - if the member is an array, the array count
                 - the member name
 
-    - reflection information for each texture used by the shader:
+    - reflection information for each texture binding used by the shader:
         - the shader stage the texture appears in (SG_SHADERSTAGE_*)
         - the image type (SG_IMAGETYPE_*)
         - the image-sample type (SG_IMAGESAMPLETYPE_*)
         - whether the texture is multisampled
         - backend specific bindslots:
             - HLSL: the texture register `register(t0..23)`
-            - MSL: the texture attribute `[[texture(0..15)]]`
+            - MSL: the texture attribute `[[texture(0..19)]]`
             - WGSL: the binding in `@group(1) @binding(0..127)`
 
     - reflection information for each sampler used by the shader:
@@ -3021,17 +3128,30 @@ sg_sampler_desc :: struct {
             - MSL: the sampler attribute `[[sampler(0..15)]]`
             - WGSL: the binding in `@group(0) @binding(0..127)`
 
-    - reflection information for each storage buffer used by the shader:
+    - reflection information for each storage buffer binding used by the shader:
         - the shader stage the storage buffer appears in (SG_SHADERSTAGE_*)
-        - whether the storage buffer is readonly (currently this must
-          always be true)
+        - whether the storage buffer is readonly
         - backend specific bindslots:
             - HLSL:
                 - for readonly storage buffer bindings: `register(t0..23)`
-                - for read/write storage buffer bindings: `register(u0..7)`
+                - for read/write storage buffer bindings: `register(u0..11)`
             - MSL: the buffer attribute `[[buffer(8..15)]]`
             - WGSL: the binding in `@group(1) @binding(0..127)`
             - GL: the binding in `layout(binding=0..7)`
+
+    - reflection information for each storage image binding used by the shader:
+        - the shader stage (*must* be SG_SHADERSTAGE_COMPUTE)
+        - whether the storage image is writeonly or readwrite (for readonly
+          access use a regular texture binding instead)
+        - the image type expected by the shader (SG_IMAGETYPE_*)
+        - the access pixel format expected by the shader (SG_PIXELFORMAT_*),
+          note that only a subset of pixel formats is allowed for storage image
+          bindings
+        - backend specific bindslots:
+            - HLSL: the UAV register `register(u0..u11)`
+            - MSL: the texture attribute `[[texture(0..19)]]`
+            - WGSL: the binding in `@group(2) @binding(0..3)`
+            - GLSL: the binding in `layout(binding=0..3, [access_format])`
 
     - reflection information for each combined image-sampler object
       used by the shader:
@@ -3062,9 +3182,9 @@ sg_sampler_desc :: struct {
     For all GL backends, shader source-code must be provided. For D3D11 and Metal,
     either shader source-code or byte-code can be provided.
 
-    NOTE that the uniform block, image, sampler and storage_buffer arrays
-    can have gaps. This allows to use the same sg_bindings struct for
-    different related shader variants.
+    NOTE that the uniform block, image, sampler, storage_buffer and
+    storage_image arrays may have gaps. This allows to use the same sg_bindings
+    struct for different related shader variants.
 
     For D3D11, if source code is provided, the d3dcompiler_47.dll will be loaded
     on demand. If this fails, shader creation will fail. When compiling HLSL
@@ -3669,7 +3789,6 @@ sg_log_item :: enum u32 {
     VALIDATE_BUFFERDESC_EXPECT_NONZERO_SIZE;
     VALIDATE_BUFFERDESC_EXPECT_MATCHING_DATA_SIZE;
     VALIDATE_BUFFERDESC_EXPECT_ZERO_DATA_SIZE;
-    VALIATE_EXPECT_DATA;
     VALIDATE_BUFFERDESC_EXPECT_NO_DATA;
     VALIDATE_BUFFERDESC_EXPECT_DATA;
     VALIDATE_BUFFERDESC_STORAGEBUFFER_SUPPORTED;
