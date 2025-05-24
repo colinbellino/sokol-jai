@@ -1719,7 +1719,7 @@
     - Likewise, the following sokol-gfx pixel formats are not supported in WebGPU:
       R16, R16SN, RG16, RG16SN, RGBA16, RGBA16SN.
       Unlike unsupported vertex formats, unsupported pixel formats can be queried
-      in cross-backend code via sg_query_pixel_format() though.
+      in cross-backend code via sg_query_pixelformat() though.
 
     - The Emscripten WebGPU shim currently doesn't support the Closure minification
       post-link-step (e.g. currently the emcc argument '--closure 1' or '--closure 2'
@@ -1907,15 +1907,14 @@ sg_query_pipeline_defaults :: (desc: *sg_pipeline_desc) -> sg_pipeline_desc #for
 sg_query_attachments_defaults :: (desc: *sg_attachments_desc) -> sg_attachments_desc #foreign sokol_gfx_clib;
 // assorted query functions
 sg_query_buffer_size :: (buf: sg_buffer) -> u64 #foreign sokol_gfx_clib;
-sg_query_buffer_type :: (buf: sg_buffer) -> sg_buffer_type #foreign sokol_gfx_clib;
-sg_query_buffer_usage :: (buf: sg_buffer) -> sg_usage #foreign sokol_gfx_clib;
+sg_query_buffer_usage :: (buf: sg_buffer) -> sg_buffer_usage #foreign sokol_gfx_clib;
 sg_query_image_type :: (img: sg_image) -> sg_image_type #foreign sokol_gfx_clib;
 sg_query_image_width :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 sg_query_image_height :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 sg_query_image_num_slices :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 sg_query_image_num_mipmaps :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 sg_query_image_pixelformat :: (img: sg_image) -> sg_pixel_format #foreign sokol_gfx_clib;
-sg_query_image_usage :: (img: sg_image) -> sg_usage #foreign sokol_gfx_clib;
+sg_query_image_usage :: (img: sg_image) -> sg_image_usage #foreign sokol_gfx_clib;
 sg_query_image_sample_count :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 // separate resource allocation and initialization (for async setup)
 sg_alloc_buffer :: () -> sg_buffer #foreign sokol_gfx_clib;
@@ -2050,6 +2049,7 @@ sg_range :: struct {
 INVALID_ID :: 0;
 NUM_INFLIGHT_FRAMES :: 2;
 MAX_COLOR_ATTACHMENTS :: 4;
+MAX_STORAGE_ATTACHMENTS :: 4;
 MAX_UNIFORMBLOCK_MEMBERS :: 16;
 MAX_VERTEX_ATTRIBUTES :: 16;
 MAX_MIPMAPS :: 16;
@@ -2206,6 +2206,8 @@ sg_pixelformat_info :: struct {
     msaa : bool;
     depth : bool;
     compressed : bool;
+    read : bool;
+    write : bool;
     bytes_per_pixel : s32;
 }
 
@@ -2216,6 +2218,7 @@ sg_features :: struct {
     mrt_independent_write_mask : bool;
     compute : bool;
     msaa_image_bindings : bool;
+    separate_buffer_types : bool;
 }
 
 sg_limits :: struct {
@@ -2253,64 +2256,6 @@ sg_resource_state :: enum u32 {
     VALID;
     FAILED;
     INVALID;
-}
-
-/*
-    sg_usage
-
-    A resource usage hint describing the update strategy of
-    buffers and images. This is used in the sg_buffer_desc.usage
-    and sg_image_desc.usage members when creating buffers
-    and images:
-
-    SG_USAGE_IMMUTABLE:     the resource will never be updated with
-                            new (CPU-side) data, instead the content of the
-                            resource must be provided on creation
-    SG_USAGE_DYNAMIC:       the resource will be updated infrequently
-                            with new data (this could range from "once
-                            after creation", to "quite often but not
-                            every frame")
-    SG_USAGE_STREAM:        the resource will be updated each frame
-                            with new content
-
-    The rendering backends use this hint to prevent that the
-    CPU needs to wait for the GPU when attempting to update
-    a resource that might be currently accessed by the GPU.
-
-    Resource content is updated with the functions sg_update_buffer() or
-    sg_append_buffer() for buffer objects, and sg_update_image() for image
-    objects. For the sg_update_*() functions, only one update is allowed per
-    frame and resource object, while sg_append_buffer() can be called
-    multiple times per frame on the same buffer. The application must update
-    all data required for rendering (this means that the update data can be
-    smaller than the resource size, if only a part of the overall resource
-    size is used for rendering, you only need to make sure that the data that
-    *is* used is valid).
-
-    The default usage is SG_USAGE_IMMUTABLE.
-*/
-sg_usage :: enum u32 {
-    DEFAULT;
-    IMMUTABLE;
-    DYNAMIC;
-    STREAM;
-}
-
-/*
-    sg_buffer_type
-
-    Indicates whether a buffer will be bound as vertex-,
-    index- or storage-buffer.
-
-    Used in the sg_buffer_desc.type member when creating a buffer.
-
-    The default value is SG_BUFFERTYPE_VERTEXBUFFER.
-*/
-sg_buffer_type :: enum u32 {
-    DEFAULT;
-    VERTEXBUFFER;
-    INDEXBUFFER;
-    STORAGEBUFFER;
 }
 
 /*
@@ -2924,11 +2869,19 @@ sg_bindings :: struct {
     _ : u32;
 }
 
+sg_buffer_usage :: struct {
+    vertex_buffer : bool;
+    index_buffer : bool;
+    storage_buffer : bool;
+    immutable : bool;
+    dynamic_update : bool;
+    stream_update : bool;
+}
+
 sg_buffer_desc :: struct {
     _ : u32;
     size : u64;
-    type : sg_buffer_type;
-    usage : sg_usage;
+    usage : sg_buffer_usage;
     data : sg_range;
     label : *u8;
     gl_buffers : [2]u32;
@@ -2938,6 +2891,14 @@ sg_buffer_desc :: struct {
     _ : u32;
 }
 
+sg_image_usage :: struct {
+    render_attachment : bool;
+    storage_attachment : bool;
+    immutable : bool;
+    dynamic_update : bool;
+    stream_update : bool;
+}
+
 sg_image_data :: struct {
     subimage : [6][16]sg_range;
 }
@@ -2945,12 +2906,11 @@ sg_image_data :: struct {
 sg_image_desc :: struct {
     _ : u32;
     type : sg_image_type;
-    render_target : bool;
+    usage : sg_image_usage;
     width : s32;
     height : s32;
     num_slices : s32;
     num_mipmaps : s32;
-    usage : sg_usage;
     pixel_format : sg_pixel_format;
     sample_count : s32;
     data : sg_image_data;
@@ -3184,6 +3144,17 @@ sg_shader_storage_buffer :: struct {
     glsl_binding_n : u8;
 }
 
+sg_shader_storage_image :: struct {
+    stage : sg_shader_stage;
+    image_type : sg_image_type;
+    access_format : sg_pixel_format;
+    writeonly : bool;
+    hlsl_register_u_n : u8;
+    msl_texture_n : u8;
+    wgsl_group2_binding_n : u8;
+    glsl_binding_n : u8;
+}
+
 sg_shader_image_sampler_pair :: struct {
     stage : sg_shader_stage;
     image_slot : u8;
@@ -3208,6 +3179,7 @@ sg_shader_desc :: struct {
     images : [16]sg_shader_image;
     samplers : [16]sg_shader_sampler;
     image_sampler_pairs : [16]sg_shader_image_sampler_pair;
+    storage_images : [4]sg_shader_storage_image;
     mtl_threads_per_threadgroup : sg_mtl_shader_threads_per_threadgroup;
     label : *u8;
     _ : u32;
@@ -3302,6 +3274,7 @@ sg_attachments_desc :: struct {
     colors : [4]sg_attachment_desc;
     resolves : [4]sg_attachment_desc;
     depth_stencil : sg_attachment_desc;
+    storages : [4]sg_attachment_desc;
     label : *u8;
     _ : u32;
 }
@@ -3572,6 +3545,7 @@ sg_log_item :: enum u32 {
     GL_3D_TEXTURES_NOT_SUPPORTED;
     GL_ARRAY_TEXTURES_NOT_SUPPORTED;
     GL_STORAGEBUFFER_GLSL_BINDING_OUT_OF_RANGE;
+    GL_STORAGEIMAGE_GLSL_BINDING_OUT_OF_RANGE;
     GL_SHADER_COMPILATION_FAILED;
     GL_SHADER_LINKING_FAILED;
     GL_VERTEX_ATTRIBUTE_NOT_FOUND_IN_SHADER;
@@ -3601,6 +3575,7 @@ sg_log_item :: enum u32 {
     D3D11_STORAGEBUFFER_HLSL_REGISTER_U_OUT_OF_RANGE;
     D3D11_IMAGE_HLSL_REGISTER_T_OUT_OF_RANGE;
     D3D11_SAMPLER_HLSL_REGISTER_S_OUT_OF_RANGE;
+    D3D11_STORAGEIMAGE_HLSL_REGISTER_U_OUT_OF_RANGE;
     D3D11_LOAD_D3DCOMPILER_47_DLL_FAILED;
     D3D11_SHADER_COMPILATION_FAILED;
     D3D11_SHADER_COMPILATION_OUTPUT;
@@ -3611,6 +3586,7 @@ sg_log_item :: enum u32 {
     D3D11_CREATE_BLEND_STATE_FAILED;
     D3D11_CREATE_RTV_FAILED;
     D3D11_CREATE_DSV_FAILED;
+    D3D11_CREATE_UAV_FAILED;
     D3D11_MAP_FOR_UPDATE_BUFFER_FAILED;
     D3D11_MAP_FOR_APPEND_BUFFER_FAILED;
     D3D11_MAP_FOR_UPDATE_IMAGE_FAILED;
@@ -3624,6 +3600,7 @@ sg_log_item :: enum u32 {
     METAL_SHADER_ENTRY_NOT_FOUND;
     METAL_UNIFORMBLOCK_MSL_BUFFER_SLOT_OUT_OF_RANGE;
     METAL_STORAGEBUFFER_MSL_BUFFER_SLOT_OUT_OF_RANGE;
+    METAL_STORAGEIMAGE_MSL_TEXTURE_SLOT_OUT_OF_RANGE;
     METAL_IMAGE_MSL_TEXTURE_SLOT_OUT_OF_RANGE;
     METAL_SAMPLER_MSL_SAMPLER_SLOT_OUT_OF_RANGE;
     METAL_CREATE_CPS_FAILED;
@@ -3645,6 +3622,7 @@ sg_log_item :: enum u32 {
     WGPU_STORAGEBUFFER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     WGPU_IMAGE_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     WGPU_SAMPLER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
+    WGPU_STORAGEIMAGE_WGSL_GROUP2_BINDING_OUT_OF_RANGE;
     WGPU_CREATE_PIPELINE_LAYOUT_FAILED;
     WGPU_CREATE_RENDER_PIPELINE_FAILED;
     WGPU_CREATE_COMPUTE_PIPELINE_FAILED;
@@ -3686,27 +3664,36 @@ sg_log_item :: enum u32 {
     APPLY_BINDINGS_STORAGE_BUFFER_TRACKER_EXHAUSTED;
     DRAW_WITHOUT_BINDINGS;
     VALIDATE_BUFFERDESC_CANARY;
+    VALIDATE_BUFFERDESC_IMMUTABLE_DYNAMIC_STREAM;
+    VALIDATE_BUFFERDESC_SEPARATE_BUFFER_TYPES;
     VALIDATE_BUFFERDESC_EXPECT_NONZERO_SIZE;
     VALIDATE_BUFFERDESC_EXPECT_MATCHING_DATA_SIZE;
     VALIDATE_BUFFERDESC_EXPECT_ZERO_DATA_SIZE;
+    VALIATE_EXPECT_DATA;
     VALIDATE_BUFFERDESC_EXPECT_NO_DATA;
+    VALIDATE_BUFFERDESC_EXPECT_DATA;
     VALIDATE_BUFFERDESC_STORAGEBUFFER_SUPPORTED;
     VALIDATE_BUFFERDESC_STORAGEBUFFER_SIZE_MULTIPLE_4;
     VALIDATE_IMAGEDATA_NODATA;
     VALIDATE_IMAGEDATA_DATA_SIZE;
     VALIDATE_IMAGEDESC_CANARY;
+    VALIDATE_IMAGEDESC_IMMUTABLE_DYNAMIC_STREAM;
+    VALIDATE_IMAGEDESC_RENDER_VS_STORAGE_ATTACHMENT;
     VALIDATE_IMAGEDESC_WIDTH;
     VALIDATE_IMAGEDESC_HEIGHT;
-    VALIDATE_IMAGEDESC_RT_PIXELFORMAT;
     VALIDATE_IMAGEDESC_NONRT_PIXELFORMAT;
-    VALIDATE_IMAGEDESC_MSAA_BUT_NO_RT;
-    VALIDATE_IMAGEDESC_NO_MSAA_RT_SUPPORT;
-    VALIDATE_IMAGEDESC_MSAA_NUM_MIPMAPS;
-    VALIDATE_IMAGEDESC_MSAA_3D_IMAGE;
-    VALIDATE_IMAGEDESC_MSAA_CUBE_IMAGE;
+    VALIDATE_IMAGEDESC_MSAA_BUT_NO_ATTACHMENT;
     VALIDATE_IMAGEDESC_DEPTH_3D_IMAGE;
-    VALIDATE_IMAGEDESC_RT_IMMUTABLE;
-    VALIDATE_IMAGEDESC_RT_NO_DATA;
+    VALIDATE_IMAGEDESC_ATTACHMENT_EXPECT_IMMUTABLE;
+    VALIDATE_IMAGEDESC_ATTACHMENT_EXPECT_NO_DATA;
+    VALIDATE_IMAGEDESC_RENDERATTACHMENT_NO_MSAA_SUPPORT;
+    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_NUM_MIPMAPS;
+    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_3D_IMAGE;
+    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_CUBE_IMAGE;
+    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_ARRAY_IMAGE;
+    VALIDATE_IMAGEDESC_RENDERATTACHMENT_PIXELFORMAT;
+    VALIDATE_IMAGEDESC_STORAGEATTACHMENT_PIXELFORMAT;
+    VALIDATE_IMAGEDESC_STORAGEATTACHMENT_EXPECT_NO_MSAA;
     VALIDATE_IMAGEDESC_INJECTED_NO_DATA;
     VALIDATE_IMAGEDESC_DYNAMIC_NO_DATA;
     VALIDATE_IMAGEDESC_COMPRESSED_IMMUTABLE;
@@ -3745,6 +3732,15 @@ sg_log_item :: enum u32 {
     VALIDATE_SHADERDESC_STORAGEBUFFER_GLSL_BINDING_COLLISION;
     VALIDATE_SHADERDESC_STORAGEBUFFER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_STORAGEBUFFER_WGSL_GROUP1_BINDING_COLLISION;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_EXPECT_COMPUTE_STAGE;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_METAL_TEXTURE_SLOT_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_METAL_TEXTURE_SLOT_COLLISION;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_HLSL_REGISTER_U_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_HLSL_REGISTER_U_COLLISION;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_GLSL_BINDING_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_GLSL_BINDING_COLLISION;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_WGSL_GROUP2_BINDING_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_STORAGEIMAGE_WGSL_GROUP2_BINDING_COLLISION;
     VALIDATE_SHADERDESC_IMAGE_METAL_TEXTURE_SLOT_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_IMAGE_METAL_TEXTURE_SLOT_COLLISION;
     VALIDATE_SHADERDESC_IMAGE_HLSL_REGISTER_T_OUT_OF_RANGE;
@@ -3780,14 +3776,13 @@ sg_log_item :: enum u32 {
     VALIDATE_ATTACHMENTSDESC_CANARY;
     VALIDATE_ATTACHMENTSDESC_NO_ATTACHMENTS;
     VALIDATE_ATTACHMENTSDESC_NO_CONT_COLOR_ATTS;
-    VALIDATE_ATTACHMENTSDESC_IMAGE;
-    VALIDATE_ATTACHMENTSDESC_MIPLEVEL;
-    VALIDATE_ATTACHMENTSDESC_FACE;
-    VALIDATE_ATTACHMENTSDESC_LAYER;
-    VALIDATE_ATTACHMENTSDESC_SLICE;
-    VALIDATE_ATTACHMENTSDESC_IMAGE_NO_RT;
+    VALIDATE_ATTACHMENTSDESC_COLOR_IMAGE;
+    VALIDATE_ATTACHMENTSDESC_COLOR_MIPLEVEL;
+    VALIDATE_ATTACHMENTSDESC_COLOR_FACE;
+    VALIDATE_ATTACHMENTSDESC_COLOR_LAYER;
+    VALIDATE_ATTACHMENTSDESC_COLOR_SLICE;
+    VALIDATE_ATTACHMENTSDESC_COLOR_IMAGE_NO_RENDERATTACHMENT;
     VALIDATE_ATTACHMENTSDESC_COLOR_INV_PIXELFORMAT;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_INV_PIXELFORMAT;
     VALIDATE_ATTACHMENTSDESC_IMAGE_SIZES;
     VALIDATE_ATTACHMENTSDESC_IMAGE_SAMPLE_COUNTS;
     VALIDATE_ATTACHMENTSDESC_RESOLVE_COLOR_IMAGE_MSAA;
@@ -3800,21 +3795,32 @@ sg_log_item :: enum u32 {
     VALIDATE_ATTACHMENTSDESC_RESOLVE_IMAGE_NO_RT;
     VALIDATE_ATTACHMENTSDESC_RESOLVE_IMAGE_SIZES;
     VALIDATE_ATTACHMENTSDESC_RESOLVE_IMAGE_FORMAT;
+    VALIDATE_ATTACHMENTSDESC_DEPTH_INV_PIXELFORMAT;
     VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE;
     VALIDATE_ATTACHMENTSDESC_DEPTH_MIPLEVEL;
     VALIDATE_ATTACHMENTSDESC_DEPTH_FACE;
     VALIDATE_ATTACHMENTSDESC_DEPTH_LAYER;
     VALIDATE_ATTACHMENTSDESC_DEPTH_SLICE;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_NO_RT;
+    VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_NO_RENDERATTACHMENT;
     VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_SIZES;
     VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_SAMPLE_COUNT;
+    VALIDATE_ATTACHMENTSDESC_STORAGE_IMAGE;
+    VALIDATE_ATTACHMENTSDESC_STORAGE_MIPLEVEL;
+    VALIDATE_ATTACHMENTSDESC_STORAGE_FACE;
+    VALIDATE_ATTACHMENTSDESC_STORAGE_LAYER;
+    VALIDATE_ATTACHMENTSDESC_STORAGE_SLICE;
+    VALIDATE_ATTACHMENTSDESC_STORAGE_IMAGE_NO_STORAGEATTACHMENT;
+    VALIDATE_ATTACHMENTSDESC_STORAGE_INV_PIXELFORMAT;
+    VALIDATE_ATTACHMENTSDESC_RENDER_VS_STORAGE_ATTACHMENTS;
     VALIDATE_BEGINPASS_CANARY;
-    VALIDATE_BEGINPASS_EXPECT_NO_ATTACHMENTS;
     VALIDATE_BEGINPASS_ATTACHMENTS_EXISTS;
     VALIDATE_BEGINPASS_ATTACHMENTS_VALID;
+    VALIDATE_BEGINPASS_COMPUTEPASS_STORAGE_ATTACHMENTS_ONLY;
+    VALIDATE_BEGINPASS_RENDERPASS_RENDER_ATTACHMENTS_ONLY;
     VALIDATE_BEGINPASS_COLOR_ATTACHMENT_IMAGE;
     VALIDATE_BEGINPASS_RESOLVE_ATTACHMENT_IMAGE;
     VALIDATE_BEGINPASS_DEPTHSTENCIL_ATTACHMENT_IMAGE;
+    VALIDATE_BEGINPASS_STORAGE_ATTACHMENT_IMAGE;
     VALIDATE_BEGINPASS_SWAPCHAIN_EXPECT_WIDTH;
     VALIDATE_BEGINPASS_SWAPCHAIN_EXPECT_WIDTH_NOTSET;
     VALIDATE_BEGINPASS_SWAPCHAIN_EXPECT_HEIGHT;
@@ -3859,6 +3865,11 @@ sg_log_item :: enum u32 {
     VALIDATE_APIP_COLOR_FORMAT;
     VALIDATE_APIP_DEPTH_FORMAT;
     VALIDATE_APIP_SAMPLE_COUNT;
+    VALIDATE_APIP_EXPECTED_STORAGE_ATTACHMENT_IMAGE;
+    VALIDATE_APIP_STORAGE_ATTACHMENT_IMAGE_EXISTS;
+    VALIDATE_APIP_STORAGE_ATTACHMENT_IMAGE_VALID;
+    VALIDATE_APIP_STORAGE_ATTACHMENT_PIXELFORMAT;
+    VALIDATE_APIP_STORAGE_ATTACHMENT_IMAGE_TYPE;
     VALIDATE_ABND_PASS_EXPECTED;
     VALIDATE_ABND_EMPTY_BINDINGS;
     VALIDATE_ABND_PIPELINE;
@@ -3891,6 +3902,10 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_STORAGEBUFFER_EXISTS;
     VALIDATE_ABND_STORAGEBUFFER_BINDING_BUFFERTYPE;
     VALIDATE_ABND_STORAGEBUFFER_READWRITE_IMMUTABLE;
+    VALIDATE_ABND_IMAGE_BINDING_VS_DEPTHSTENCIL_ATTACHMENT;
+    VALIDATE_ABND_IMAGE_BINDING_VS_COLOR_ATTACHMENT;
+    VALIDATE_ABND_IMAGE_BINDING_VS_RESOLVE_ATTACHMENT;
+    VALIDATE_ABND_IMAGE_BINDING_VS_STORAGE_ATTACHMENT;
     VALIDATE_AU_PASS_EXPECTED;
     VALIDATE_AU_NO_PIPELINE;
     VALIDATE_AU_NO_UNIFORMBLOCK_AT_SLOT;
