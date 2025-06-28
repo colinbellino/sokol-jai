@@ -3211,6 +3211,8 @@ sg_sampler_desc :: struct {
     source code, you can provide an optional target string via
     sg_shader_stage_desc.d3d11_target, the default target is "vs_4_0" for the
     vertex shader stage and "ps_4_0" for the pixel shader stage.
+    You may optionally provide the file path to enable the default #include handler
+    behavior when compiling source code.
 */
 sg_shader_stage :: enum u32 {
     NONE;
@@ -3224,6 +3226,7 @@ sg_shader_function :: struct {
     bytecode : sg_range;
     entry : *u8;
     d3d11_target : *u8;
+    d3d11_filepath : *u8;
 }
 
 sg_shader_attr_base_type :: enum u32 {
