@@ -627,6 +627,8 @@ sdtx_color1i :: (rgba: u32) -> void #foreign sokol_debugtext_clib;
 sdtx_putc :: (c: u8) -> void #foreign sokol_debugtext_clib;
 sdtx_puts :: (str: *u8) -> void #foreign sokol_debugtext_clib;
 sdtx_putr :: (str: *u8, len: s32) -> void #foreign sokol_debugtext_clib;
+// language bindings helper: get the internal printf format buffer
+sdtx_get_cleared_fmt_buffer :: () -> sdtx_range #foreign sokol_debugtext_clib;
 
 sdtx_log_item_t :: enum u32 {
     OK;
