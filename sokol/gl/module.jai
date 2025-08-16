@@ -232,9 +232,9 @@
 
             sgl_enable_texture()
             sgl_disable_texture()
-            sgl_texture(sg_image img, sg_sampler smp)
+            sgl_texture(sg_view tex_view, sg_sampler smp)
 
-        NOTE: the img and smp handles can be invalid (SG_INVALID_ID), in this
+        NOTE: the tex_view and smp handles can be invalid (SG_INVALID_ID), in this
         case, sokol-gl will fall back to the internal default (white) texture
         and sampler.
 
@@ -796,7 +796,7 @@ sgl_scissor_rect :: (x: s32, y: s32, w: s32, h: s32, origin_top_left: bool) -> v
 sgl_scissor_rectf :: (x: float, y: float, w: float, h: float, origin_top_left: bool) -> void #foreign sokol_gl_clib;
 sgl_enable_texture :: () -> void #foreign sokol_gl_clib;
 sgl_disable_texture :: () -> void #foreign sokol_gl_clib;
-sgl_texture :: (img: sg_image, smp: sg_sampler) -> void #foreign sokol_gl_clib;
+sgl_texture :: (tex_view: sg_view, smp: sg_sampler) -> void #foreign sokol_gl_clib;
 sgl_layer :: (layer_id: s32) -> void #foreign sokol_gl_clib;
 // pipeline stack functions
 sgl_load_default_pipeline :: () -> void #foreign sokol_gl_clib;

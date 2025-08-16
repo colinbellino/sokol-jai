@@ -1971,13 +1971,13 @@ sg_make_image :: (desc: *sg_image_desc) -> sg_image #foreign sokol_gfx_clib;
 sg_make_sampler :: (desc: *sg_sampler_desc) -> sg_sampler #foreign sokol_gfx_clib;
 sg_make_shader :: (desc: *sg_shader_desc) -> sg_shader #foreign sokol_gfx_clib;
 sg_make_pipeline :: (desc: *sg_pipeline_desc) -> sg_pipeline #foreign sokol_gfx_clib;
-sg_make_attachments :: (desc: *sg_attachments_desc) -> sg_attachments #foreign sokol_gfx_clib;
+sg_make_view :: (desc: *sg_view_desc) -> sg_view #foreign sokol_gfx_clib;
 sg_destroy_buffer :: (buf: sg_buffer) -> void #foreign sokol_gfx_clib;
 sg_destroy_image :: (img: sg_image) -> void #foreign sokol_gfx_clib;
 sg_destroy_sampler :: (smp: sg_sampler) -> void #foreign sokol_gfx_clib;
 sg_destroy_shader :: (shd: sg_shader) -> void #foreign sokol_gfx_clib;
 sg_destroy_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
-sg_destroy_attachments :: (atts: sg_attachments) -> void #foreign sokol_gfx_clib;
+sg_destroy_view :: (view: sg_view) -> void #foreign sokol_gfx_clib;
 sg_update_buffer :: (buf: sg_buffer, data: *sg_range) -> void #foreign sokol_gfx_clib;
 sg_update_image :: (img: sg_image, data: *sg_image_data) -> void #foreign sokol_gfx_clib;
 sg_append_buffer :: (buf: sg_buffer, data: *sg_range) -> s32 #foreign sokol_gfx_clib;
@@ -2010,28 +2010,28 @@ sg_query_image_state :: (img: sg_image) -> sg_resource_state #foreign sokol_gfx_
 sg_query_sampler_state :: (smp: sg_sampler) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_shader_state :: (shd: sg_shader) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_pipeline_state :: (pip: sg_pipeline) -> sg_resource_state #foreign sokol_gfx_clib;
-sg_query_attachments_state :: (atts: sg_attachments) -> sg_resource_state #foreign sokol_gfx_clib;
+sg_query_view_state :: (view: sg_view) -> sg_resource_state #foreign sokol_gfx_clib;
 // get runtime information about a resource
 sg_query_buffer_info :: (buf: sg_buffer) -> sg_buffer_info #foreign sokol_gfx_clib;
 sg_query_image_info :: (img: sg_image) -> sg_image_info #foreign sokol_gfx_clib;
 sg_query_sampler_info :: (smp: sg_sampler) -> sg_sampler_info #foreign sokol_gfx_clib;
 sg_query_shader_info :: (shd: sg_shader) -> sg_shader_info #foreign sokol_gfx_clib;
 sg_query_pipeline_info :: (pip: sg_pipeline) -> sg_pipeline_info #foreign sokol_gfx_clib;
-sg_query_attachments_info :: (atts: sg_attachments) -> sg_attachments_info #foreign sokol_gfx_clib;
+sg_query_view_info :: (view: sg_view) -> sg_view_info #foreign sokol_gfx_clib;
 // get desc structs matching a specific resource (NOTE that not all creation attributes may be provided)
 sg_query_buffer_desc :: (buf: sg_buffer) -> sg_buffer_desc #foreign sokol_gfx_clib;
 sg_query_image_desc :: (img: sg_image) -> sg_image_desc #foreign sokol_gfx_clib;
 sg_query_sampler_desc :: (smp: sg_sampler) -> sg_sampler_desc #foreign sokol_gfx_clib;
 sg_query_shader_desc :: (shd: sg_shader) -> sg_shader_desc #foreign sokol_gfx_clib;
 sg_query_pipeline_desc :: (pip: sg_pipeline) -> sg_pipeline_desc #foreign sokol_gfx_clib;
-sg_query_attachments_desc :: (atts: sg_attachments) -> sg_attachments_desc #foreign sokol_gfx_clib;
+sg_query_view_desc :: (view: sg_view) -> sg_view_desc #foreign sokol_gfx_clib;
 // get resource creation desc struct with their default values replaced
 sg_query_buffer_defaults :: (desc: *sg_buffer_desc) -> sg_buffer_desc #foreign sokol_gfx_clib;
 sg_query_image_defaults :: (desc: *sg_image_desc) -> sg_image_desc #foreign sokol_gfx_clib;
 sg_query_sampler_defaults :: (desc: *sg_sampler_desc) -> sg_sampler_desc #foreign sokol_gfx_clib;
 sg_query_shader_defaults :: (desc: *sg_shader_desc) -> sg_shader_desc #foreign sokol_gfx_clib;
 sg_query_pipeline_defaults :: (desc: *sg_pipeline_desc) -> sg_pipeline_desc #foreign sokol_gfx_clib;
-sg_query_attachments_defaults :: (desc: *sg_attachments_desc) -> sg_attachments_desc #foreign sokol_gfx_clib;
+sg_query_view_defaults :: (desc: *sg_view_desc) -> sg_view_desc #foreign sokol_gfx_clib;
 // assorted query functions
 sg_query_buffer_size :: (buf: sg_buffer) -> u64 #foreign sokol_gfx_clib;
 sg_query_buffer_usage :: (buf: sg_buffer) -> sg_buffer_usage #foreign sokol_gfx_clib;
@@ -2043,37 +2043,40 @@ sg_query_image_num_mipmaps :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
 sg_query_image_pixelformat :: (img: sg_image) -> sg_pixel_format #foreign sokol_gfx_clib;
 sg_query_image_usage :: (img: sg_image) -> sg_image_usage #foreign sokol_gfx_clib;
 sg_query_image_sample_count :: (img: sg_image) -> s32 #foreign sokol_gfx_clib;
+sg_query_view_type :: (view: sg_view) -> sg_view_type #foreign sokol_gfx_clib;
+sg_query_view_image :: (view: sg_view) -> sg_image #foreign sokol_gfx_clib;
+sg_query_view_buffer :: (view: sg_view) -> sg_buffer #foreign sokol_gfx_clib;
 // separate resource allocation and initialization (for async setup)
 sg_alloc_buffer :: () -> sg_buffer #foreign sokol_gfx_clib;
 sg_alloc_image :: () -> sg_image #foreign sokol_gfx_clib;
 sg_alloc_sampler :: () -> sg_sampler #foreign sokol_gfx_clib;
 sg_alloc_shader :: () -> sg_shader #foreign sokol_gfx_clib;
 sg_alloc_pipeline :: () -> sg_pipeline #foreign sokol_gfx_clib;
-sg_alloc_attachments :: () -> sg_attachments #foreign sokol_gfx_clib;
+sg_alloc_view :: () -> sg_view #foreign sokol_gfx_clib;
 sg_dealloc_buffer :: (buf: sg_buffer) -> void #foreign sokol_gfx_clib;
 sg_dealloc_image :: (img: sg_image) -> void #foreign sokol_gfx_clib;
 sg_dealloc_sampler :: (smp: sg_sampler) -> void #foreign sokol_gfx_clib;
 sg_dealloc_shader :: (shd: sg_shader) -> void #foreign sokol_gfx_clib;
 sg_dealloc_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
-sg_dealloc_attachments :: (attachments: sg_attachments) -> void #foreign sokol_gfx_clib;
+sg_dealloc_view :: (view: sg_view) -> void #foreign sokol_gfx_clib;
 sg_init_buffer :: (buf: sg_buffer, desc: *sg_buffer_desc) -> void #foreign sokol_gfx_clib;
 sg_init_image :: (img: sg_image, desc: *sg_image_desc) -> void #foreign sokol_gfx_clib;
 sg_init_sampler :: (smg: sg_sampler, desc: *sg_sampler_desc) -> void #foreign sokol_gfx_clib;
 sg_init_shader :: (shd: sg_shader, desc: *sg_shader_desc) -> void #foreign sokol_gfx_clib;
 sg_init_pipeline :: (pip: sg_pipeline, desc: *sg_pipeline_desc) -> void #foreign sokol_gfx_clib;
-sg_init_attachments :: (attachments: sg_attachments, desc: *sg_attachments_desc) -> void #foreign sokol_gfx_clib;
+sg_init_view :: (view: sg_view, desc: *sg_view_desc) -> void #foreign sokol_gfx_clib;
 sg_uninit_buffer :: (buf: sg_buffer) -> void #foreign sokol_gfx_clib;
 sg_uninit_image :: (img: sg_image) -> void #foreign sokol_gfx_clib;
 sg_uninit_sampler :: (smp: sg_sampler) -> void #foreign sokol_gfx_clib;
 sg_uninit_shader :: (shd: sg_shader) -> void #foreign sokol_gfx_clib;
 sg_uninit_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
-sg_uninit_attachments :: (atts: sg_attachments) -> void #foreign sokol_gfx_clib;
+sg_uninit_view :: (view: sg_view) -> void #foreign sokol_gfx_clib;
 sg_fail_buffer :: (buf: sg_buffer) -> void #foreign sokol_gfx_clib;
 sg_fail_image :: (img: sg_image) -> void #foreign sokol_gfx_clib;
 sg_fail_sampler :: (smp: sg_sampler) -> void #foreign sokol_gfx_clib;
 sg_fail_shader :: (shd: sg_shader) -> void #foreign sokol_gfx_clib;
 sg_fail_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
-sg_fail_attachments :: (atts: sg_attachments) -> void #foreign sokol_gfx_clib;
+sg_fail_view :: (view: sg_view) -> void #foreign sokol_gfx_clib;
 // frame stats
 sg_enable_frame_stats :: () -> void #foreign sokol_gfx_clib;
 sg_disable_frame_stats :: () -> void #foreign sokol_gfx_clib;
@@ -2093,8 +2096,8 @@ sg_d3d11_query_sampler_info :: (smp: sg_sampler) -> sg_d3d11_sampler_info #forei
 sg_d3d11_query_shader_info :: (shd: sg_shader) -> sg_d3d11_shader_info #foreign sokol_gfx_clib;
 // D3D11: get internal pipeline resource objects
 sg_d3d11_query_pipeline_info :: (pip: sg_pipeline) -> sg_d3d11_pipeline_info #foreign sokol_gfx_clib;
-// D3D11: get internal pass resource objects
-sg_d3d11_query_attachments_info :: (atts: sg_attachments) -> sg_d3d11_attachments_info #foreign sokol_gfx_clib;
+// D3D11: get internal view resource objects
+sg_d3d11_query_view_info :: (view: sg_view) -> sg_d3d11_view_info #foreign sokol_gfx_clib;
 // Metal: return __bridge-casted MTLDevice
 sg_mtl_device :: () -> *void #foreign sokol_gfx_clib;
 // Metal: return __bridge-casted MTLRenderCommandEncoder when inside render pass (otherwise zero)
@@ -2131,8 +2134,8 @@ sg_wgpu_query_sampler_info :: (smp: sg_sampler) -> sg_wgpu_sampler_info #foreign
 sg_wgpu_query_shader_info :: (shd: sg_shader) -> sg_wgpu_shader_info #foreign sokol_gfx_clib;
 // WebGPU: get internal pipeline resource objects
 sg_wgpu_query_pipeline_info :: (pip: sg_pipeline) -> sg_wgpu_pipeline_info #foreign sokol_gfx_clib;
-// WebGPU: get internal pass resource objects
-sg_wgpu_query_attachments_info :: (atts: sg_attachments) -> sg_wgpu_attachments_info #foreign sokol_gfx_clib;
+// WebGPU: get internal view resource objects
+sg_wgpu_query_view_info :: (view: sg_view) -> sg_wgpu_view_info #foreign sokol_gfx_clib;
 // GL: get internal buffer resource objects
 sg_gl_query_buffer_info :: (buf: sg_buffer) -> sg_gl_buffer_info #foreign sokol_gfx_clib;
 // GL: get internal image resource objects
@@ -2141,8 +2144,8 @@ sg_gl_query_image_info :: (img: sg_image) -> sg_gl_image_info #foreign sokol_gfx
 sg_gl_query_sampler_info :: (smp: sg_sampler) -> sg_gl_sampler_info #foreign sokol_gfx_clib;
 // GL: get internal shader resource objects
 sg_gl_query_shader_info :: (shd: sg_shader) -> sg_gl_shader_info #foreign sokol_gfx_clib;
-// GL: get internal pass resource objects
-sg_gl_query_attachments_info :: (atts: sg_attachments) -> sg_gl_attachments_info #foreign sokol_gfx_clib;
+// GL: get internal view resource objects
+sg_gl_query_view_info :: (view: sg_view) -> sg_gl_view_info #foreign sokol_gfx_clib;
 
 sg_buffer :: struct {
     id : u32;
@@ -2164,7 +2167,7 @@ sg_pipeline :: struct {
     id : u32;
 }
 
-sg_attachments :: struct {
+sg_view :: struct {
     id : u32;
 }
 
@@ -2176,17 +2179,15 @@ sg_range :: struct {
 INVALID_ID :: 0;
 NUM_INFLIGHT_FRAMES :: 2;
 MAX_COLOR_ATTACHMENTS :: 4;
-MAX_STORAGE_ATTACHMENTS :: 4;
 MAX_UNIFORMBLOCK_MEMBERS :: 16;
 MAX_VERTEX_ATTRIBUTES :: 16;
 MAX_MIPMAPS :: 16;
 MAX_TEXTUREARRAY_LAYERS :: 128;
-MAX_UNIFORMBLOCK_BINDSLOTS :: 8;
 MAX_VERTEXBUFFER_BINDSLOTS :: 8;
-MAX_IMAGE_BINDSLOTS :: 16;
+MAX_UNIFORMBLOCK_BINDSLOTS :: 8;
+MAX_VIEW_BINDSLOTS :: 28;
 MAX_SAMPLER_BINDSLOTS :: 16;
-MAX_STORAGEBUFFER_BINDSLOTS :: 8;
-MAX_IMAGE_SAMPLER_PAIRS :: 16;
+MAX_TEXTURE_SAMPLER_PAIRS :: 16;
 
 sg_color :: struct {
     r : float;
@@ -2344,8 +2345,9 @@ sg_features :: struct {
     mrt_independent_blend_state : bool;
     mrt_independent_write_mask : bool;
     compute : bool;
-    msaa_image_bindings : bool;
+    msaa_texture_bindings : bool;
     separate_buffer_types : bool;
+    gl_texture_views : bool;
 }
 
 sg_limits :: struct {
@@ -2423,6 +2425,8 @@ sg_image_type :: enum u32 {
 }
 
 /*
+    FIXME: rename to sg_texture_sample_type
+
     sg_image_sample_type
 
     The basic data type of a texture sample as expected by a shader.
@@ -2974,6 +2978,12 @@ sg_swapchain :: struct {
     gl : sg_gl_swapchain;
 }
 
+sg_attachments :: struct {
+    colors : [4]sg_view;
+    resolves : [4]sg_view;
+    depth_stencil : sg_view;
+}
+
 sg_pass :: struct {
     _ : u32;
     compute : bool;
@@ -2990,9 +3000,8 @@ sg_bindings :: struct {
     vertex_buffer_offsets : [8]s32;
     index_buffer : sg_buffer;
     index_buffer_offset : s32;
-    images : [16]sg_image;
+    views : [28]sg_view;
     samplers : [16]sg_sampler;
-    storage_buffers : [8]sg_buffer;
     _ : u32;
 }
 
@@ -3019,11 +3028,28 @@ sg_buffer_desc :: struct {
 }
 
 sg_image_usage :: struct {
-    render_attachment : bool;
-    storage_attachment : bool;
+    storage_image : bool;
+    color_attachment : bool;
+    resolve_attachment : bool;
+    depth_stencil_attachment : bool;
     immutable : bool;
     dynamic_update : bool;
     stream_update : bool;
+}
+
+/*
+    sg_view_type
+
+    Allows to query the type of a view via the function sg_query_view_type()
+*/
+sg_view_type :: enum u32 {
+    INVALID;
+    STORAGEBUFFER;
+    STORAGEIMAGE;
+    TEXTURE;
+    COLORATTACHMENT;
+    RESOLVEATTACHMENT;
+    DEPTHSTENCILATTACHMENT;
 }
 
 sg_image_data :: struct {
@@ -3046,9 +3072,7 @@ sg_image_desc :: struct {
     gl_texture_target : u32;
     mtl_textures : [2]*void;
     d3d11_texture : *void;
-    d3d11_shader_resource_view : *void;
     wgpu_texture : *void;
-    wgpu_texture_view : *void;
     _ : u32;
 }
 
@@ -3259,7 +3283,7 @@ sg_shader_uniform_block :: struct {
     glsl_uniforms : [16]sg_glsl_shader_uniform;
 }
 
-sg_shader_image :: struct {
+sg_shader_texture_view :: struct {
     stage : sg_shader_stage;
     image_type : sg_image_type;
     sample_type : sg_image_sample_type;
@@ -3267,6 +3291,33 @@ sg_shader_image :: struct {
     hlsl_register_t_n : u8;
     msl_texture_n : u8;
     wgsl_group1_binding_n : u8;
+}
+
+sg_shader_storage_buffer_view :: struct {
+    stage : sg_shader_stage;
+    readonly : bool;
+    hlsl_register_t_n : u8;
+    hlsl_register_u_n : u8;
+    msl_buffer_n : u8;
+    wgsl_group1_binding_n : u8;
+    glsl_binding_n : u8;
+}
+
+sg_shader_storage_image_view :: struct {
+    stage : sg_shader_stage;
+    image_type : sg_image_type;
+    access_format : sg_pixel_format;
+    writeonly : bool;
+    hlsl_register_u_n : u8;
+    msl_texture_n : u8;
+    wgsl_group1_binding_n : u8;
+    glsl_binding_n : u8;
+}
+
+sg_shader_view :: struct {
+    texture : sg_shader_texture_view;
+    storage_buffer : sg_shader_storage_buffer_view;
+    storage_image : sg_shader_storage_image_view;
 }
 
 sg_shader_sampler :: struct {
@@ -3277,30 +3328,9 @@ sg_shader_sampler :: struct {
     wgsl_group1_binding_n : u8;
 }
 
-sg_shader_storage_buffer :: struct {
+sg_shader_texture_sampler_pair :: struct {
     stage : sg_shader_stage;
-    readonly : bool;
-    hlsl_register_t_n : u8;
-    hlsl_register_u_n : u8;
-    msl_buffer_n : u8;
-    wgsl_group1_binding_n : u8;
-    glsl_binding_n : u8;
-}
-
-sg_shader_storage_image :: struct {
-    stage : sg_shader_stage;
-    image_type : sg_image_type;
-    access_format : sg_pixel_format;
-    writeonly : bool;
-    hlsl_register_u_n : u8;
-    msl_texture_n : u8;
-    wgsl_group2_binding_n : u8;
-    glsl_binding_n : u8;
-}
-
-sg_shader_image_sampler_pair :: struct {
-    stage : sg_shader_stage;
-    image_slot : u8;
+    view_slot : u8;
     sampler_slot : u8;
     glsl_name : *u8;
 }
@@ -3318,11 +3348,9 @@ sg_shader_desc :: struct {
     compute_func : sg_shader_function;
     attrs : [16]sg_shader_vertex_attr;
     uniform_blocks : [8]sg_shader_uniform_block;
-    storage_buffers : [8]sg_shader_storage_buffer;
-    images : [16]sg_shader_image;
+    views : [28]sg_shader_view;
     samplers : [16]sg_shader_sampler;
-    image_sampler_pairs : [16]sg_shader_image_sampler_pair;
-    storage_images : [4]sg_shader_storage_image;
+    texture_sampler_pairs : [16]sg_shader_texture_sampler_pair;
     mtl_threads_per_threadgroup : sg_mtl_shader_threads_per_threadgroup;
     label : *u8;
     _ : u32;
@@ -3406,18 +3434,36 @@ sg_pipeline_desc :: struct {
     _ : u32;
 }
 
-sg_attachment_desc :: struct {
+sg_buffer_view_desc :: struct {
+    buffer : sg_buffer;
+    offset : s32;
+}
+
+sg_image_view_desc :: struct {
     image : sg_image;
     mip_level : s32;
     slice : s32;
 }
 
-sg_attachments_desc :: struct {
+sg_texture_view_range :: struct {
+    base : s32;
+    count : s32;
+}
+
+sg_texture_view_desc :: struct {
+    image : sg_image;
+    mip_levels : sg_texture_view_range;
+    slices : sg_texture_view_range;
+}
+
+sg_view_desc :: struct {
     _ : u32;
-    colors : [4]sg_attachment_desc;
-    resolves : [4]sg_attachment_desc;
-    depth_stencil : sg_attachment_desc;
-    storages : [4]sg_attachment_desc;
+    texture : sg_texture_view_desc;
+    storage_buffer : sg_buffer_view_desc;
+    storage_image : sg_image_view_desc;
+    color_attachment : sg_image_view_desc;
+    resolve_attachment : sg_image_view_desc;
+    depth_stencil_attachment : sg_image_view_desc;
     label : *u8;
     _ : u32;
 }
@@ -3430,13 +3476,13 @@ sg_trace_hooks :: struct {
     make_sampler : (a0: *sg_sampler_desc, a1: sg_sampler, a2: *void) #c_call;
     make_shader : (a0: *sg_shader_desc, a1: sg_shader, a2: *void) #c_call;
     make_pipeline : (a0: *sg_pipeline_desc, a1: sg_pipeline, a2: *void) #c_call;
-    make_attachments : (a0: *sg_attachments_desc, a1: sg_attachments, a2: *void) #c_call;
+    make_view : (a0: *sg_view_desc, a1: sg_view, a2: *void) #c_call;
     destroy_buffer : (a0: sg_buffer, a1: *void) #c_call;
     destroy_image : (a0: sg_image, a1: *void) #c_call;
     destroy_sampler : (a0: sg_sampler, a1: *void) #c_call;
     destroy_shader : (a0: sg_shader, a1: *void) #c_call;
     destroy_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
-    destroy_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    destroy_view : (a0: sg_view, a1: *void) #c_call;
     update_buffer : (a0: sg_buffer, a1: *sg_range, a2: *void) #c_call;
     update_image : (a0: sg_image, a1: *sg_image_data, a2: *void) #c_call;
     append_buffer : (a0: sg_buffer, a1: *sg_range, a2: s32, a3: *void) #c_call;
@@ -3455,31 +3501,31 @@ sg_trace_hooks :: struct {
     alloc_sampler : (a0: sg_sampler, a1: *void) #c_call;
     alloc_shader : (a0: sg_shader, a1: *void) #c_call;
     alloc_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
-    alloc_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    alloc_view : (a0: sg_view, a1: *void) #c_call;
     dealloc_buffer : (a0: sg_buffer, a1: *void) #c_call;
     dealloc_image : (a0: sg_image, a1: *void) #c_call;
     dealloc_sampler : (a0: sg_sampler, a1: *void) #c_call;
     dealloc_shader : (a0: sg_shader, a1: *void) #c_call;
     dealloc_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
-    dealloc_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    dealloc_view : (a0: sg_view, a1: *void) #c_call;
     init_buffer : (a0: sg_buffer, a1: *sg_buffer_desc, a2: *void) #c_call;
     init_image : (a0: sg_image, a1: *sg_image_desc, a2: *void) #c_call;
     init_sampler : (a0: sg_sampler, a1: *sg_sampler_desc, a2: *void) #c_call;
     init_shader : (a0: sg_shader, a1: *sg_shader_desc, a2: *void) #c_call;
     init_pipeline : (a0: sg_pipeline, a1: *sg_pipeline_desc, a2: *void) #c_call;
-    init_attachments : (a0: sg_attachments, a1: *sg_attachments_desc, a2: *void) #c_call;
+    init_view : (a0: sg_view, a1: *sg_view_desc, a2: *void) #c_call;
     uninit_buffer : (a0: sg_buffer, a1: *void) #c_call;
     uninit_image : (a0: sg_image, a1: *void) #c_call;
     uninit_sampler : (a0: sg_sampler, a1: *void) #c_call;
     uninit_shader : (a0: sg_shader, a1: *void) #c_call;
     uninit_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
-    uninit_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    uninit_view : (a0: sg_view, a1: *void) #c_call;
     fail_buffer : (a0: sg_buffer, a1: *void) #c_call;
     fail_image : (a0: sg_image, a1: *void) #c_call;
     fail_sampler : (a0: sg_sampler, a1: *void) #c_call;
     fail_shader : (a0: sg_shader, a1: *void) #c_call;
     fail_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
-    fail_attachments : (a0: sg_attachments, a1: *void) #c_call;
+    fail_view : (a0: sg_view, a1: *void) #c_call;
     push_debug_group : (a0: *u8, a1: *void) #c_call;
     pop_debug_group : (a0: *void) #c_call;
 }
@@ -3519,7 +3565,7 @@ sg_pipeline_info :: struct {
     slot : sg_slot_info;
 }
 
-sg_attachments_info :: struct {
+sg_view_info :: struct {
     slot : sg_slot_info;
 }
 
@@ -3528,6 +3574,7 @@ sg_frame_stats_gl :: struct {
     num_active_texture : u32;
     num_bind_texture : u32;
     num_bind_sampler : u32;
+    num_bind_image_texture : u32;
     num_use_program : u32;
     num_render_state : u32;
     num_vertex_attrib_pointer : u32;
@@ -3610,14 +3657,26 @@ sg_frame_stats_metal_pipeline :: struct {
 
 sg_frame_stats_metal_bindings :: struct {
     num_set_vertex_buffer : u32;
+    num_set_vertex_buffer_offset : u32;
+    num_skip_redundant_vertex_buffer : u32;
     num_set_vertex_texture : u32;
+    num_skip_redundant_vertex_texture : u32;
     num_set_vertex_sampler_state : u32;
+    num_skip_redundant_vertex_sampler_state : u32;
     num_set_fragment_buffer : u32;
+    num_set_fragment_buffer_offset : u32;
+    num_skip_redundant_fragment_buffer : u32;
     num_set_fragment_texture : u32;
+    num_skip_redundant_fragment_texture : u32;
     num_set_fragment_sampler_state : u32;
+    num_skip_redundant_fragment_sampler_state : u32;
     num_set_compute_buffer : u32;
+    num_set_compute_buffer_offset : u32;
+    num_skip_redundant_compute_buffer : u32;
     num_set_compute_texture : u32;
+    num_skip_redundant_compute_texture : u32;
     num_set_compute_sampler_state : u32;
+    num_skip_redundant_compute_sampler_state : u32;
 }
 
 sg_frame_stats_metal_uniforms :: struct {
@@ -3718,8 +3777,8 @@ sg_log_item :: enum u32 {
     D3D11_STORAGEBUFFER_HLSL_REGISTER_T_OUT_OF_RANGE;
     D3D11_STORAGEBUFFER_HLSL_REGISTER_U_OUT_OF_RANGE;
     D3D11_IMAGE_HLSL_REGISTER_T_OUT_OF_RANGE;
-    D3D11_SAMPLER_HLSL_REGISTER_S_OUT_OF_RANGE;
     D3D11_STORAGEIMAGE_HLSL_REGISTER_U_OUT_OF_RANGE;
+    D3D11_SAMPLER_HLSL_REGISTER_S_OUT_OF_RANGE;
     D3D11_LOAD_D3DCOMPILER_47_DLL_FAILED;
     D3D11_SHADER_COMPILATION_FAILED;
     D3D11_SHADER_COMPILATION_OUTPUT;
@@ -3763,14 +3822,13 @@ sg_log_item :: enum u32 {
     WGPU_CREATE_SHADER_MODULE_FAILED;
     WGPU_SHADER_CREATE_BINDGROUP_LAYOUT_FAILED;
     WGPU_UNIFORMBLOCK_WGSL_GROUP0_BINDING_OUT_OF_RANGE;
+    WGPU_TEXTURE_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     WGPU_STORAGEBUFFER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
-    WGPU_IMAGE_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
+    WGPU_STORAGEIMAGE_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     WGPU_SAMPLER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
-    WGPU_STORAGEIMAGE_WGSL_GROUP2_BINDING_OUT_OF_RANGE;
     WGPU_CREATE_PIPELINE_LAYOUT_FAILED;
     WGPU_CREATE_RENDER_PIPELINE_FAILED;
     WGPU_CREATE_COMPUTE_PIPELINE_FAILED;
-    WGPU_ATTACHMENTS_CREATE_TEXTURE_VIEW_FAILED;
     IDENTICAL_COMMIT_LISTENER;
     COMMIT_LISTENER_ARRAY_FULL;
     TRACE_HOOKS_NOT_ENABLED;
@@ -3779,33 +3837,32 @@ sg_log_item :: enum u32 {
     DEALLOC_SAMPLER_INVALID_STATE;
     DEALLOC_SHADER_INVALID_STATE;
     DEALLOC_PIPELINE_INVALID_STATE;
-    DEALLOC_ATTACHMENTS_INVALID_STATE;
+    DEALLOC_VIEW_INVALID_STATE;
     INIT_BUFFER_INVALID_STATE;
     INIT_IMAGE_INVALID_STATE;
     INIT_SAMPLER_INVALID_STATE;
     INIT_SHADER_INVALID_STATE;
     INIT_PIPELINE_INVALID_STATE;
-    INIT_ATTACHMENTS_INVALID_STATE;
+    INIT_VIEW_INVALID_STATE;
     UNINIT_BUFFER_INVALID_STATE;
     UNINIT_IMAGE_INVALID_STATE;
     UNINIT_SAMPLER_INVALID_STATE;
     UNINIT_SHADER_INVALID_STATE;
     UNINIT_PIPELINE_INVALID_STATE;
-    UNINIT_ATTACHMENTS_INVALID_STATE;
+    UNINIT_VIEW_INVALID_STATE;
     FAIL_BUFFER_INVALID_STATE;
     FAIL_IMAGE_INVALID_STATE;
     FAIL_SAMPLER_INVALID_STATE;
     FAIL_SHADER_INVALID_STATE;
     FAIL_PIPELINE_INVALID_STATE;
-    FAIL_ATTACHMENTS_INVALID_STATE;
+    FAIL_VIEW_INVALID_STATE;
     BUFFER_POOL_EXHAUSTED;
     IMAGE_POOL_EXHAUSTED;
     SAMPLER_POOL_EXHAUSTED;
     SHADER_POOL_EXHAUSTED;
     PIPELINE_POOL_EXHAUSTED;
-    PASS_POOL_EXHAUSTED;
-    BEGINPASS_ATTACHMENT_INVALID;
-    APPLY_BINDINGS_STORAGE_BUFFER_TRACKER_EXHAUSTED;
+    VIEW_POOL_EXHAUSTED;
+    BEGINPASS_ATTACHMENTS_ALIVE;
     DRAW_WITHOUT_BINDINGS;
     VALIDATE_BUFFERDESC_CANARY;
     VALIDATE_BUFFERDESC_IMMUTABLE_DYNAMIC_STREAM;
@@ -3821,7 +3878,6 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDATA_DATA_SIZE;
     VALIDATE_IMAGEDESC_CANARY;
     VALIDATE_IMAGEDESC_IMMUTABLE_DYNAMIC_STREAM;
-    VALIDATE_IMAGEDESC_RENDER_VS_STORAGE_ATTACHMENT;
     VALIDATE_IMAGEDESC_WIDTH;
     VALIDATE_IMAGEDESC_HEIGHT;
     VALIDATE_IMAGEDESC_NONRT_PIXELFORMAT;
@@ -3829,14 +3885,15 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDESC_DEPTH_3D_IMAGE;
     VALIDATE_IMAGEDESC_ATTACHMENT_EXPECT_IMMUTABLE;
     VALIDATE_IMAGEDESC_ATTACHMENT_EXPECT_NO_DATA;
-    VALIDATE_IMAGEDESC_RENDERATTACHMENT_NO_MSAA_SUPPORT;
-    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_NUM_MIPMAPS;
-    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_3D_IMAGE;
-    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_CUBE_IMAGE;
-    VALIDATE_IMAGEDESC_RENDERATTACHMENT_MSAA_ARRAY_IMAGE;
-    VALIDATE_IMAGEDESC_RENDERATTACHMENT_PIXELFORMAT;
-    VALIDATE_IMAGEDESC_STORAGEATTACHMENT_PIXELFORMAT;
-    VALIDATE_IMAGEDESC_STORAGEATTACHMENT_EXPECT_NO_MSAA;
+    VALIDATE_IMAGEDESC_ATTACHMENT_PIXELFORMAT;
+    VALIDATE_IMAGEDESC_ATTACHMENT_RESOLVE_EXPECT_NO_MSAA;
+    VALIDATE_IMAGEDESC_ATTACHMENT_NO_MSAA_SUPPORT;
+    VALIDATE_IMAGEDESC_ATTACHMENT_MSAA_NUM_MIPMAPS;
+    VALIDATE_IMAGEDESC_ATTACHMENT_MSAA_3D_IMAGE;
+    VALIDATE_IMAGEDESC_ATTACHMENT_MSAA_CUBE_IMAGE;
+    VALIDATE_IMAGEDESC_ATTACHMENT_MSAA_ARRAY_IMAGE;
+    VALIDATE_IMAGEDESC_STORAGEIMAGE_PIXELFORMAT;
+    VALIDATE_IMAGEDESC_STORAGEIMAGE_EXPECT_NO_MSAA;
     VALIDATE_IMAGEDESC_INJECTED_NO_DATA;
     VALIDATE_IMAGEDESC_DYNAMIC_NO_DATA;
     VALIDATE_IMAGEDESC_COMPRESSED_IMMUTABLE;
@@ -3851,7 +3908,8 @@ sg_log_item :: enum u32 {
     VALIDATE_SHADERDESC_COMPUTE_SOURCE_OR_BYTECODE;
     VALIDATE_SHADERDESC_INVALID_SHADER_COMBO;
     VALIDATE_SHADERDESC_NO_BYTECODE_SIZE;
-    VALIDATE_SHADERDESC_METAL_THREADS_PER_THREADGROUP;
+    VALIDATE_SHADERDESC_METAL_THREADS_PER_THREADGROUP_INITIALIZED;
+    VALIDATE_SHADERDESC_METAL_THREADS_PER_THREADGROUP_MULTIPLE_32;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_NO_CONT_MEMBERS;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_SIZE_IS_ZERO;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_METAL_BUFFER_SLOT_OUT_OF_RANGE;
@@ -3865,46 +3923,47 @@ sg_log_item :: enum u32 {
     VALIDATE_SHADERDESC_UNIFORMBLOCK_SIZE_MISMATCH;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_ARRAY_COUNT;
     VALIDATE_SHADERDESC_UNIFORMBLOCK_STD140_ARRAY_TYPE;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_METAL_BUFFER_SLOT_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_METAL_BUFFER_SLOT_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_T_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_T_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_U_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_HLSL_REGISTER_U_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_GLSL_BINDING_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_GLSL_BINDING_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEBUFFER_WGSL_GROUP1_BINDING_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_EXPECT_COMPUTE_STAGE;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_METAL_TEXTURE_SLOT_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_METAL_TEXTURE_SLOT_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_HLSL_REGISTER_U_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_HLSL_REGISTER_U_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_GLSL_BINDING_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_GLSL_BINDING_COLLISION;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_WGSL_GROUP2_BINDING_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_STORAGEIMAGE_WGSL_GROUP2_BINDING_COLLISION;
-    VALIDATE_SHADERDESC_IMAGE_METAL_TEXTURE_SLOT_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_IMAGE_METAL_TEXTURE_SLOT_COLLISION;
-    VALIDATE_SHADERDESC_IMAGE_HLSL_REGISTER_T_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_IMAGE_HLSL_REGISTER_T_COLLISION;
-    VALIDATE_SHADERDESC_IMAGE_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_IMAGE_WGSL_GROUP1_BINDING_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_METAL_BUFFER_SLOT_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_METAL_BUFFER_SLOT_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_HLSL_REGISTER_T_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_HLSL_REGISTER_T_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_HLSL_REGISTER_U_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_HLSL_REGISTER_U_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_GLSL_BINDING_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_GLSL_BINDING_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEBUFFER_WGSL_GROUP1_BINDING_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_EXPECT_COMPUTE_STAGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_METAL_TEXTURE_SLOT_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_METAL_TEXTURE_SLOT_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_HLSL_REGISTER_U_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_HLSL_REGISTER_U_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_GLSL_BINDING_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_GLSL_BINDING_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_STORAGEIMAGE_WGSL_GROUP1_BINDING_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_TEXTURE_METAL_TEXTURE_SLOT_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_TEXTURE_METAL_TEXTURE_SLOT_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_TEXTURE_HLSL_REGISTER_T_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_TEXTURE_HLSL_REGISTER_T_COLLISION;
+    VALIDATE_SHADERDESC_VIEW_TEXTURE_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_VIEW_TEXTURE_WGSL_GROUP1_BINDING_COLLISION;
     VALIDATE_SHADERDESC_SAMPLER_METAL_SAMPLER_SLOT_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_SAMPLER_METAL_SAMPLER_SLOT_COLLISION;
     VALIDATE_SHADERDESC_SAMPLER_HLSL_REGISTER_S_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_SAMPLER_HLSL_REGISTER_S_COLLISION;
     VALIDATE_SHADERDESC_SAMPLER_WGSL_GROUP1_BINDING_OUT_OF_RANGE;
     VALIDATE_SHADERDESC_SAMPLER_WGSL_GROUP1_BINDING_COLLISION;
-    VALIDATE_SHADERDESC_IMAGE_SAMPLER_PAIR_IMAGE_SLOT_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_IMAGE_SAMPLER_PAIR_SAMPLER_SLOT_OUT_OF_RANGE;
-    VALIDATE_SHADERDESC_IMAGE_SAMPLER_PAIR_IMAGE_STAGE_MISMATCH;
-    VALIDATE_SHADERDESC_IMAGE_SAMPLER_PAIR_SAMPLER_STAGE_MISMATCH;
-    VALIDATE_SHADERDESC_IMAGE_SAMPLER_PAIR_GLSL_NAME;
+    VALIDATE_SHADERDESC_TEXTURE_SAMPLER_PAIR_VIEW_SLOT_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_TEXTURE_SAMPLER_PAIR_SAMPLER_SLOT_OUT_OF_RANGE;
+    VALIDATE_SHADERDESC_TEXTURE_SAMPLER_PAIR_TEXTURE_STAGE_MISMATCH;
+    VALIDATE_SHADERDESC_TEXTURE_SAMPLER_PAIR_EXPECT_TEXTURE_VIEW;
+    VALIDATE_SHADERDESC_TEXTURE_SAMPLER_PAIR_SAMPLER_STAGE_MISMATCH;
+    VALIDATE_SHADERDESC_TEXTURE_SAMPLER_PAIR_GLSL_NAME;
     VALIDATE_SHADERDESC_NONFILTERING_SAMPLER_REQUIRED;
     VALIDATE_SHADERDESC_COMPARISON_SAMPLER_REQUIRED;
-    VALIDATE_SHADERDESC_IMAGE_NOT_REFERENCED_BY_IMAGE_SAMPLER_PAIRS;
-    VALIDATE_SHADERDESC_SAMPLER_NOT_REFERENCED_BY_IMAGE_SAMPLER_PAIRS;
+    VALIDATE_SHADERDESC_TEXVIEW_NOT_REFERENCED_BY_TEXTURE_SAMPLER_PAIRS;
+    VALIDATE_SHADERDESC_SAMPLER_NOT_REFERENCED_BY_TEXTURE_SAMPLER_PAIRS;
     VALIDATE_SHADERDESC_ATTR_STRING_TOO_LONG;
     VALIDATE_PIPELINEDESC_CANARY;
     VALIDATE_PIPELINEDESC_SHADER;
@@ -3916,58 +3975,35 @@ sg_log_item :: enum u32 {
     VALIDATE_PIPELINEDESC_ATTR_SEMANTICS;
     VALIDATE_PIPELINEDESC_SHADER_READONLY_STORAGEBUFFERS;
     VALIDATE_PIPELINEDESC_BLENDOP_MINMAX_REQUIRES_BLENDFACTOR_ONE;
-    VALIDATE_ATTACHMENTSDESC_CANARY;
-    VALIDATE_ATTACHMENTSDESC_NO_ATTACHMENTS;
-    VALIDATE_ATTACHMENTSDESC_NO_CONT_COLOR_ATTS;
-    VALIDATE_ATTACHMENTSDESC_COLOR_IMAGE;
-    VALIDATE_ATTACHMENTSDESC_COLOR_MIPLEVEL;
-    VALIDATE_ATTACHMENTSDESC_COLOR_FACE;
-    VALIDATE_ATTACHMENTSDESC_COLOR_LAYER;
-    VALIDATE_ATTACHMENTSDESC_COLOR_SLICE;
-    VALIDATE_ATTACHMENTSDESC_COLOR_IMAGE_NO_RENDERATTACHMENT;
-    VALIDATE_ATTACHMENTSDESC_COLOR_INV_PIXELFORMAT;
-    VALIDATE_ATTACHMENTSDESC_IMAGE_SIZES;
-    VALIDATE_ATTACHMENTSDESC_IMAGE_SAMPLE_COUNTS;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_COLOR_IMAGE_MSAA;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_IMAGE;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_SAMPLE_COUNT;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_MIPLEVEL;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_FACE;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_LAYER;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_SLICE;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_IMAGE_NO_RT;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_IMAGE_SIZES;
-    VALIDATE_ATTACHMENTSDESC_RESOLVE_IMAGE_FORMAT;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_INV_PIXELFORMAT;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_MIPLEVEL;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_FACE;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_LAYER;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_SLICE;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_NO_RENDERATTACHMENT;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_SIZES;
-    VALIDATE_ATTACHMENTSDESC_DEPTH_IMAGE_SAMPLE_COUNT;
-    VALIDATE_ATTACHMENTSDESC_STORAGE_IMAGE;
-    VALIDATE_ATTACHMENTSDESC_STORAGE_MIPLEVEL;
-    VALIDATE_ATTACHMENTSDESC_STORAGE_FACE;
-    VALIDATE_ATTACHMENTSDESC_STORAGE_LAYER;
-    VALIDATE_ATTACHMENTSDESC_STORAGE_SLICE;
-    VALIDATE_ATTACHMENTSDESC_STORAGE_IMAGE_NO_STORAGEATTACHMENT;
-    VALIDATE_ATTACHMENTSDESC_STORAGE_INV_PIXELFORMAT;
-    VALIDATE_ATTACHMENTSDESC_RENDER_VS_STORAGE_ATTACHMENTS;
+    VALIDATE_VIEWDESC_CANARY;
+    VALIDATE_VIEWDESC_UNIQUE_VIEWTYPE;
+    VALIDATE_VIEWDESC_ANY_VIEWTYPE;
+    VALIDATE_VIEWDESC_RESOURCE_ALIVE;
+    VALIDATE_VIEWDESC_RESOURCE_FAILED;
+    VALIDATE_VIEWDESC_STORAGEBUFFER_OFFSET_VS_BUFFER_SIZE;
+    VALIDATE_VIEWDESC_STORAGEBUFFER_OFFSET_MULTIPLE_256;
+    VALIDATE_VIEWDESC_STORAGEBUFFER_USAGE;
+    VALIDATE_VIEWDESC_STORAGEIMAGE_USAGE;
+    VALIDATE_VIEWDESC_COLORATTACHMENT_USAGE;
+    VALIDATE_VIEWDESC_RESOLVEATTACHMENT_USAGE;
+    VALIDATE_VIEWDESC_DEPTHSTENCILATTACHMENT_USAGE;
+    VALIDATE_VIEWDESC_IMAGE_MIPLEVEL;
+    VALIDATE_VIEWDESC_IMAGE_2D_SLICE;
+    VALIDATE_VIEWDESC_IMAGE_CUBEMAP_SLICE;
+    VALIDATE_VIEWDESC_IMAGE_ARRAY_SLICE;
+    VALIDATE_VIEWDESC_IMAGE_3D_SLICE;
+    VALIDATE_VIEWDESC_TEXTURE_EXPECT_NO_MSAA;
+    VALIDATE_VIEWDESC_TEXTURE_MIPLEVELS;
+    VALIDATE_VIEWDESC_TEXTURE_2D_SLICES;
+    VALIDATE_VIEWDESC_TEXTURE_CUBEMAP_SLICES;
+    VALIDATE_VIEWDESC_TEXTURE_ARRAY_SLICES;
+    VALIDATE_VIEWDESC_TEXTURE_3D_SLICES;
+    VALIDATE_VIEWDESC_STORAGEIMAGE_PIXELFORMAT;
+    VALIDATE_VIEWDESC_COLORATTACHMENT_PIXELFORMAT;
+    VALIDATE_VIEWDESC_DEPTHSTENCILATTACHMENT_PIXELFORMAT;
+    VALIDATE_VIEWDESC_RESOLVEATTACHMENT_SAMPLECOUNT;
     VALIDATE_BEGINPASS_CANARY;
-    VALIDATE_BEGINPASS_ATTACHMENTS_EXISTS;
-    VALIDATE_BEGINPASS_ATTACHMENTS_VALID;
-    VALIDATE_BEGINPASS_COMPUTEPASS_STORAGE_ATTACHMENTS_ONLY;
-    VALIDATE_BEGINPASS_RENDERPASS_RENDER_ATTACHMENTS_ONLY;
-    VALIDATE_BEGINPASS_COLOR_ATTACHMENT_IMAGE_ALIVE;
-    VALIDATE_BEGINPASS_COLOR_ATTACHMENT_IMAGE_VALID;
-    VALIDATE_BEGINPASS_RESOLVE_ATTACHMENT_IMAGE_ALIVE;
-    VALIDATE_BEGINPASS_RESOLVE_ATTACHMENT_IMAGE_VALID;
-    VALIDATE_BEGINPASS_DEPTHSTENCIL_ATTACHMENT_IMAGE_ALIVE;
-    VALIDATE_BEGINPASS_DEPTHSTENCIL_ATTACHMENT_IMAGE_VALID;
-    VALIDATE_BEGINPASS_STORAGE_ATTACHMENT_IMAGE_ALIVE;
-    VALIDATE_BEGINPASS_STORAGE_ATTACHMENT_IMAGE_VALID;
+    VALIDATE_BEGINPASS_COMPUTEPASS_EXPECT_NO_ATTACHMENTS;
     VALIDATE_BEGINPASS_SWAPCHAIN_EXPECT_WIDTH;
     VALIDATE_BEGINPASS_SWAPCHAIN_EXPECT_WIDTH_NOTSET;
     VALIDATE_BEGINPASS_SWAPCHAIN_EXPECT_HEIGHT;
@@ -3996,6 +4032,30 @@ sg_log_item :: enum u32 {
     VALIDATE_BEGINPASS_SWAPCHAIN_WGPU_EXPECT_DEPTHSTENCILVIEW;
     VALIDATE_BEGINPASS_SWAPCHAIN_WGPU_EXPECT_DEPTHSTENCILVIEW_NOTSET;
     VALIDATE_BEGINPASS_SWAPCHAIN_GL_EXPECT_FRAMEBUFFER_NOTSET;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEWS_CONTINUOUS;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEW_ALIVE;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEW_VALID;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEW_TYPE;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEW_IMAGE_ALIVE;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEW_IMAGE_VALID;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEW_SIZES;
+    VALIDATE_BEGINPASS_COLORATTACHMENTVIEW_SAMPLECOUNTS;
+    VALIDATE_BEGINPASS_RESOLVEATTACHMENTVIEW_NO_COLORATTACHMENTVIEW;
+    VALIDATE_BEGINPASS_RESOLVEATTACHMENTVIEW_ALIVE;
+    VALIDATE_BEGINPASS_RESOLVEATTACHMENTVIEW_VALID;
+    VALIDATE_BEGINPASS_RESOLVEATTACHMENTVIEW_TYPE;
+    VALIDATE_BEGINPASS_RESOLVEATTACHMENTVIEW_IMAGE_ALIVE;
+    VALIDATE_BEGINPASS_RESOLVEATTACHMENTVIEW_IMAGE_VALID;
+    VALIDATE_BEGINPASS_RESOLVEATTACHMENTVIEW_SIZES;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEWS_CONTINUOUS;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEW_ALIVE;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEW_VALID;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEW_TYPE;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEW_IMAGE_ALIVE;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEW_IMAGE_VALID;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEW_SIZES;
+    VALIDATE_BEGINPASS_DEPTHSTENCILATTACHMENTVIEW_SAMPLECOUNT;
+    VALIDATE_BEGINPASS_ATTACHMENTS_EXPECTED;
     VALIDATE_AVP_RENDERPASS_EXPECTED;
     VALIDATE_ASR_RENDERPASS_EXPECTED;
     VALIDATE_APIP_PIPELINE_VALID_ID;
@@ -4006,21 +4066,19 @@ sg_log_item :: enum u32 {
     VALIDATE_APIP_PIPELINE_SHADER_VALID;
     VALIDATE_APIP_COMPUTEPASS_EXPECTED;
     VALIDATE_APIP_RENDERPASS_EXPECTED;
-    VALIDATE_APIP_CURPASS_ATTACHMENTS_ALIVE;
-    VALIDATE_APIP_CURPASS_ATTACHMENTS_VALID;
-    VALIDATE_APIP_ATT_COUNT;
-    VALIDATE_APIP_COLOR_ATTACHMENT_IMAGE_ALIVE;
-    VALIDATE_APIP_COLOR_ATTACHMENT_IMAGE_VALID;
-    VALIDATE_APIP_DEPTHSTENCIL_ATTACHMENT_IMAGE_ALIVE;
-    VALIDATE_APIP_DEPTHSTENCIL_ATTACHMENT_IMAGE_VALID;
-    VALIDATE_APIP_COLOR_FORMAT;
-    VALIDATE_APIP_DEPTH_FORMAT;
-    VALIDATE_APIP_SAMPLE_COUNT;
-    VALIDATE_APIP_EXPECTED_STORAGE_ATTACHMENT_IMAGE;
-    VALIDATE_APIP_STORAGE_ATTACHMENT_IMAGE_ALIVE;
-    VALIDATE_APIP_STORAGE_ATTACHMENT_IMAGE_VALID;
-    VALIDATE_APIP_STORAGE_ATTACHMENT_PIXELFORMAT;
-    VALIDATE_APIP_STORAGE_ATTACHMENT_IMAGE_TYPE;
+    VALIDATE_APIP_SWAPCHAIN_COLOR_COUNT;
+    VALIDATE_APIP_SWAPCHAIN_COLOR_FORMAT;
+    VALIDATE_APIP_SWAPCHAIN_DEPTH_FORMAT;
+    VALIDATE_APIP_SWAPCHAIN_SAMPLE_COUNT;
+    VALIDATE_APIP_ATTACHMENTS_ALIVE;
+    VALIDATE_APIP_COLORATTACHMENTS_COUNT;
+    VALIDATE_APIP_COLORATTACHMENTS_VIEW_VALID;
+    VALIDATE_APIP_COLORATTACHMENTS_IMAGE_VALID;
+    VALIDATE_APIP_COLORATTACHMENTS_FORMAT;
+    VALIDATE_APIP_DEPTHSTENCILATTACHMENT_VIEW_VALID;
+    VALIDATE_APIP_DEPTHSTENCILATTACHMENT_IMAGE_VALID;
+    VALIDATE_APIP_DEPTHSTENCILATTACHMENT_FORMAT;
+    VALIDATE_APIP_ATTACHMENT_SAMPLE_COUNT;
     VALIDATE_ABND_PASS_EXPECTED;
     VALIDATE_ABND_EMPTY_BINDINGS;
     VALIDATE_ABND_NO_PIPELINE;
@@ -4028,38 +4086,41 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_PIPELINE_VALID;
     VALIDATE_ABND_PIPELINE_SHADER_ALIVE;
     VALIDATE_ABND_PIPELINE_SHADER_VALID;
-    VALIDATE_ABND_COMPUTE_EXPECTED_NO_VBS;
-    VALIDATE_ABND_COMPUTE_EXPECTED_NO_IB;
-    VALIDATE_ABND_EXPECTED_VB;
-    VALIDATE_ABND_VB_ALIVE;
-    VALIDATE_ABND_VB_TYPE;
-    VALIDATE_ABND_VB_OVERFLOW;
-    VALIDATE_ABND_NO_IB;
-    VALIDATE_ABND_IB;
-    VALIDATE_ABND_IB_ALIVE;
-    VALIDATE_ABND_IB_TYPE;
-    VALIDATE_ABND_IB_OVERFLOW;
-    VALIDATE_ABND_EXPECTED_IMAGE_BINDING;
-    VALIDATE_ABND_IMG_ALIVE;
-    VALIDATE_ABND_IMAGE_TYPE_MISMATCH;
-    VALIDATE_ABND_EXPECTED_MULTISAMPLED_IMAGE;
-    VALIDATE_ABND_IMAGE_MSAA;
-    VALIDATE_ABND_EXPECTED_FILTERABLE_IMAGE;
-    VALIDATE_ABND_EXPECTED_DEPTH_IMAGE;
+    VALIDATE_ABND_COMPUTE_EXPECTED_NO_VBUFS;
+    VALIDATE_ABND_COMPUTE_EXPECTED_NO_IBUF;
+    VALIDATE_ABND_EXPECTED_VBUF;
+    VALIDATE_ABND_VBUF_ALIVE;
+    VALIDATE_ABND_VBUF_USAGE;
+    VALIDATE_ABND_VBUF_OVERFLOW;
+    VALIDATE_ABND_EXPECTED_NO_IBUF;
+    VALIDATE_ABND_EXPECTED_IBUF;
+    VALIDATE_ABND_IBUF_ALIVE;
+    VALIDATE_ABND_IBUF_USAGE;
+    VALIDATE_ABND_IBUF_OVERFLOW;
+    VALIDATE_ABND_EXPECTED_VIEW_BINDING;
+    VALIDATE_ABND_VIEW_ALIVE;
+    VALIDATE_ABND_EXPECT_TEXVIEW;
+    VALIDATE_ABND_EXPECT_SBVIEW;
+    VALIDATE_ABND_EXPECT_SIMGVIEW;
+    VALIDATE_ABND_TEXVIEW_IMAGETYPE_MISMATCH;
+    VALIDATE_ABND_TEXVIEW_EXPECTED_MULTISAMPLED_IMAGE;
+    VALIDATE_ABND_TEXVIEW_EXPECTED_NON_MULTISAMPLED_IMAGE;
+    VALIDATE_ABND_TEXVIEW_EXPECTED_FILTERABLE_IMAGE;
+    VALIDATE_ABND_TEXVIEW_EXPECTED_DEPTH_IMAGE;
+    VALIDATE_ABND_SBVIEW_READWRITE_IMMUTABLE;
+    VALIDATE_ABND_SIMGVIEW_COMPUTE_PASS_EXPECTED;
+    VALIDATE_ABND_SIMGVIEW_IMAGETYPE_MISMATCH;
+    VALIDATE_ABND_SIMGVIEW_ACCESSFORMAT;
     VALIDATE_ABND_EXPECTED_SAMPLER_BINDING;
     VALIDATE_ABND_UNEXPECTED_SAMPLER_COMPARE_NEVER;
     VALIDATE_ABND_EXPECTED_SAMPLER_COMPARE_NEVER;
     VALIDATE_ABND_EXPECTED_NONFILTERING_SAMPLER;
-    VALIDATE_ABND_SMP_ALIVE;
-    VALIDATE_ABND_SMP_VALID;
-    VALIDATE_ABND_EXPECTED_STORAGEBUFFER_BINDING;
-    VALIDATE_ABND_STORAGEBUFFER_ALIVE;
-    VALIDATE_ABND_STORAGEBUFFER_BINDING_BUFFERTYPE;
-    VALIDATE_ABND_STORAGEBUFFER_READWRITE_IMMUTABLE;
-    VALIDATE_ABND_IMAGE_BINDING_VS_DEPTHSTENCIL_ATTACHMENT;
-    VALIDATE_ABND_IMAGE_BINDING_VS_COLOR_ATTACHMENT;
-    VALIDATE_ABND_IMAGE_BINDING_VS_RESOLVE_ATTACHMENT;
-    VALIDATE_ABND_IMAGE_BINDING_VS_STORAGE_ATTACHMENT;
+    VALIDATE_ABND_SAMPLER_ALIVE;
+    VALIDATE_ABND_SAMPLER_VALID;
+    VALIDATE_ABND_TEXTURE_BINDING_VS_DEPTHSTENCIL_ATTACHMENT;
+    VALIDATE_ABND_TEXTURE_BINDING_VS_COLOR_ATTACHMENT;
+    VALIDATE_ABND_TEXTURE_BINDING_VS_RESOLVE_ATTACHMENT;
+    VALIDATE_ABND_TEXTURE_BINDING_VS_STORAGE_ATTACHMENT;
     VALIDATE_AU_PASS_EXPECTED;
     VALIDATE_AU_NO_PIPELINE;
     VALIDATE_AU_PIPELINE_ALIVE;
@@ -4139,9 +4200,8 @@ sg_desc :: struct {
     sampler_pool_size : s32;
     shader_pool_size : s32;
     pipeline_pool_size : s32;
-    attachments_pool_size : s32;
+    view_pool_size : s32;
     uniform_buffer_size : s32;
-    max_dispatch_calls_per_pass : s32;
     max_commit_listeners : s32;
     disable_validation : bool;
     d3d11_shader_debugging : bool;
@@ -4163,7 +4223,6 @@ sg_d3d11_image_info :: struct {
     tex2d : *void;
     tex3d : *void;
     res : *void;
-    srv : *void;
 }
 
 sg_d3d11_sampler_info :: struct {
@@ -4183,8 +4242,10 @@ sg_d3d11_pipeline_info :: struct {
     bs : *void;
 }
 
-sg_d3d11_attachments_info :: struct {
-    color_rtv : [4]*void;
+sg_d3d11_view_info :: struct {
+    srv : *void;
+    uav : *void;
+    rtv : *void;
     dsv : *void;
 }
 
@@ -4220,7 +4281,6 @@ sg_wgpu_buffer_info :: struct {
 
 sg_wgpu_image_info :: struct {
     tex : *void;
-    view : *void;
 }
 
 sg_wgpu_sampler_info :: struct {
@@ -4238,10 +4298,8 @@ sg_wgpu_pipeline_info :: struct {
     compute_pipeline : *void;
 }
 
-sg_wgpu_attachments_info :: struct {
-    color_view : [4]*void;
-    resolve_view : [4]*void;
-    ds_view : *void;
+sg_wgpu_view_info :: struct {
+    view : *void;
 }
 
 sg_gl_buffer_info :: struct {
@@ -4252,7 +4310,6 @@ sg_gl_buffer_info :: struct {
 sg_gl_image_info :: struct {
     tex : [2]u32;
     tex_target : u32;
-    msaa_render_buffer : u32;
     active_slot : s32;
 }
 
@@ -4264,8 +4321,9 @@ sg_gl_shader_info :: struct {
     prog : u32;
 }
 
-sg_gl_attachments_info :: struct {
-    framebuffer : u32;
-    msaa_resolve_framebuffer : [4]u32;
+sg_gl_view_info :: struct {
+    tex_view : [2]u32;
+    msaa_render_buffer : u32;
+    msaa_resolve_frame_buffer : u32;
 }
 
