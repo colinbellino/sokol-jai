@@ -74,13 +74,13 @@ init :: () #c_call {
         color_attachment = .{ image = color_img },
     }));
     state.offscreen.pass.attachments.depth_stencil = sg_make_view(*(sg_view_desc.{
-        depth_stencil_attachments = .{ image = depth_img },
+        depth_stencil_attachment = .{ image = depth_img },
     }));
 
     // the display render pass needs a texture view on the color image
     state.display.bind.views[VIEW_tex] = sg_make_view(*(sg_view_desc.{
-        .texture = .{ image = color_img },
-    });
+        texture = .{ image = color_img },
+    }));
 
     // a donut shape which is rendered into the offscreen render target, and
     // a sphere shape which is rendered into the default framebuffer
@@ -146,7 +146,7 @@ init :: () #c_call {
     state.display.pip = sg_make_pipeline(*display_pip_desc);
 
     // a sampler object for sampling the render target as texture
-    state.display.bind.samplers[SMP_smp] := sg_make_sampler(*(sg_sampler_desc.{
+    state.display.bind.samplers[SMP_smp] = sg_make_sampler(*(sg_sampler_desc.{
         min_filter = .LINEAR,
         mag_filter = .LINEAR,
         wrap_u = .REPEAT,
