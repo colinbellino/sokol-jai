@@ -14,15 +14,16 @@
 #load "./shader.jai";
 
 OFFSCREEN_SAMPLE_COUNT :: 1;
+OFFSCREEN_WIDTH :: 256;
+OFFSCREEN_HEIGHT :: 256;
 
 state: struct {
     offscreen: struct {
-        pass_action: sg_pass_action;
-        attachments: sg_attachments;
-        pip:         sg_pipeline;
-        bind:        sg_bindings;
+        pass: sg_pass;
+        pip:  sg_pipeline;
+        bind: sg_bindings;
     };
-    default: struct {
+    display: struct {
         pass_action: sg_pass_action;
         pip:         sg_pipeline;
         bind:        sg_bindings;
@@ -42,32 +43,43 @@ init :: () #c_call {
         logger = .{ func = slog_func },
     }));
 
-    // default pass action: clear to blue-ish
-    state.default.pass_action = .{
+    // display render pass action: clear to blue-ish
+    state.display.pass_action = .{
         colors[0] = .{ load_action = .CLEAR, clear_value = .{ 0.25, 0.45, 0.65, 1.0 } },
     };
 
     // offscreen pass action: clear to grey
-    state.offscreen.pass_action = .{
+    state.offscreen.pass.action = .{
         colors[0] = .{ load_action = .CLEAR, clear_value = .{ 0.25, 0.25, 0.25, 1.0 } },
     };
 
-    // a render pass with one color- and one depth-attachment image
-    img_desc := sg_image_desc.{
-        usage = .{ render_attachment = true },
-        width = 256,
-        height = 256,
+    // setup the color- and depth-stencil-attachment images and video
+    color_img := sg_make_image(*(sg_image_desc.{
+        usage = .{ color_attachment = true },
+        width = OFFSCREEN_WIDTH,
+        height = OFFSCREEN_HEIGHT,
         pixel_format = .RGBA8,
         sample_count = OFFSCREEN_SAMPLE_COUNT,
-    };
-    color_img := sg_make_image(*img_desc);
-    img_desc.pixel_format = .DEPTH;
-    depth_img := sg_make_image(*img_desc);
-    state.offscreen.attachments = sg_make_attachments(*(sg_attachments_desc.{
-        colors[0] = .{ image = color_img },
-        depth_stencil = .{
-            image = depth_img,
-        },
+    }));
+    depth_img := sg_make_image(*(sg_image_desc.{
+        usage = .{ depth_stencil_attachment = true },
+        width = OFFSCREEN_WIDTH,
+        height = OFFSCREEN_HEIGHT,
+        pixel_format = .DEPTH,
+        sample_count = OFFSCREEN_SAMPLE_COUNT,
+    }));
+
+    // the offscreen render pass needs a color- and a depth-stencil-attachment view
+    state.offscreen.pass.attachments.colors[0] = sg_make_view(*(sg_view_desc.{
+        color_attachment = .{ image = color_img },
+    }));
+    state.offscreen.pass.attachments.depth_stencil = sg_make_view(*(sg_view_desc.{
+        depth_stencil_attachment = .{ image = depth_img },
+    }));
+
+    // the display render pass needs a texture view on the color image
+    state.display.bind.views[VIEW_tex] = sg_make_view(*(sg_view_desc.{
+        texture = .{ image = color_img },
     }));
 
     // a donut shape which is rendered into the offscreen render target, and
@@ -93,7 +105,11 @@ init :: () #c_call {
     state.sphere = sshape_element_range(*buf);
 
     vbuf := sg_make_buffer(xx,force *sshape_vertex_buffer_desc(*buf));
+    state.offscreen.bind.vertex_buffers[0] = vbuf;
+    state.display.bind.vertex_buffers[0] = vbuf;
     ibuf := sg_make_buffer(xx,force *sshape_index_buffer_desc(*buf));
+    state.offscreen.bind.index_buffer = ibuf;
+    state.display.bind.index_buffer = ibuf;
 
     // pipeline-state-object for offscreen-rendered donut, don't need texture coord here
     offscreen_pip_desc := sg_pipeline_desc.{
@@ -114,7 +130,7 @@ init :: () #c_call {
     state.offscreen.pip = sg_make_pipeline(*offscreen_pip_desc);
 
     // and another pipeline-state-object for the default pass
-    default_pip_desc := sg_pipeline_desc.{
+    display_pip_desc := sg_pipeline_desc.{
         shader = sg_make_shader(*default_shader_desc(sg_query_backend())),
         index_type = .UINT16,
         cull_mode = .BACK,
@@ -123,33 +139,19 @@ init :: () #c_call {
             write_enabled = true,
         },
     };
-    default_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state();
-    default_pip_desc.layout.attrs[ATTR_default_position] = xx,force sshape_position_vertex_attr_state();
-    default_pip_desc.layout.attrs[ATTR_default_normal] = xx,force sshape_normal_vertex_attr_state();
-    default_pip_desc.layout.attrs[ATTR_default_texcoord0] = xx,force sshape_texcoord_vertex_attr_state();
-    state.default.pip = sg_make_pipeline(*default_pip_desc);
+    display_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state();
+    display_pip_desc.layout.attrs[ATTR_default_position] = xx,force sshape_position_vertex_attr_state();
+    display_pip_desc.layout.attrs[ATTR_default_normal] = xx,force sshape_normal_vertex_attr_state();
+    display_pip_desc.layout.attrs[ATTR_default_texcoord0] = xx,force sshape_texcoord_vertex_attr_state();
+    state.display.pip = sg_make_pipeline(*display_pip_desc);
 
     // a sampler object for sampling the render target as texture
-    smp := sg_make_sampler(*(sg_sampler_desc.{
+    state.display.bind.samplers[SMP_smp] = sg_make_sampler(*(sg_sampler_desc.{
         min_filter = .LINEAR,
         mag_filter = .LINEAR,
         wrap_u = .REPEAT,
         wrap_v = .REPEAT,
     }));
-
-    // the resource bindings for rendering a non-textured cube into offscreen render target
-    state.offscreen.bind = .{
-        vertex_buffers[0] = vbuf,
-        index_buffer = ibuf,
-    };
-
-    // resource bindings to render a textured shape, using the offscreen render target as texture
-    state.default.bind = .{
-        vertex_buffers[0] = vbuf,
-        index_buffer = ibuf,
-    };
-    state.default.bind.images[IMG_tex] = color_img;
-    state.default.bind.samplers[SMP_smp] = smp;
 }
 
 frame :: () #c_call {
@@ -163,14 +165,14 @@ frame :: () #c_call {
     vs_params := Vs_Params.{
         mvp = compute_mvp(rx = state.rx, ry = state.ry, aspect = 1.0, eye_dist = 2.5),
     };
-    sg_begin_pass(*(sg_pass.{ action = state.offscreen.pass_action, attachments = state.offscreen.attachments }));
+    sg_begin_pass(*state.offscreen.pass);
     sg_apply_pipeline(state.offscreen.pip);
     sg_apply_bindings(*state.offscreen.bind);
     sg_apply_uniforms(UB_vs_params, *(sg_range.{ ptr = *vs_params, size = size_of(type_of(vs_params)) }));
     sg_draw(state.donut.base_element, state.donut.num_elements, 1);
     sg_end_pass();
 
-    // and the default-pass, rendering a rotating textured sphere which uses the
+    // and the display-pass, rendering a rotating textured sphere which uses the
     // previously rendered offscreen render-target as texture
     vs_params = Vs_Params.{
         mvp = compute_mvp(
@@ -180,9 +182,9 @@ frame :: () #c_call {
             eye_dist = 2.0,
         ),
     };
-    sg_begin_pass(*(sg_pass.{ action = state.default.pass_action, swapchain = xx,force sglue_swapchain() }));
-    sg_apply_pipeline(state.default.pip);
-    sg_apply_bindings(*state.default.bind);
+    sg_begin_pass(*(sg_pass.{ action = state.display.pass_action, swapchain = xx,force sglue_swapchain() }));
+    sg_apply_pipeline(state.display.pip);
+    sg_apply_bindings(*state.display.bind);
     sg_apply_uniforms(UB_vs_params, *(sg_range.{ ptr = *vs_params, size = size_of(type_of(vs_params)) }));
     sg_draw(state.sphere.base_element, state.sphere.num_elements, 1);
     sg_end_pass();
