@@ -1401,6 +1401,10 @@ sapp_mouse_locked :: () -> bool #foreign sokol_app_clib;
 sapp_set_mouse_cursor :: (cursor: sapp_mouse_cursor) -> void #foreign sokol_app_clib;
 // get current mouse cursor type
 sapp_get_mouse_cursor :: () -> sapp_mouse_cursor #foreign sokol_app_clib;
+// associate a custom mouse cursor image to a sapp_mouse_cursor enum entry
+sapp_bind_mouse_cursor_image :: (cursor: sapp_mouse_cursor, desc: *sapp_image_desc) -> sapp_mouse_cursor #foreign sokol_app_clib;
+// restore the sapp_mouse_cursor enum entry to it's default system appearance
+sapp_unbind_mouse_cursor_image :: (cursor: sapp_mouse_cursor) -> void #foreign sokol_app_clib;
 // return the userdata pointer optionally provided in sapp_desc
 sapp_userdata :: () -> *void #foreign sokol_app_clib;
 // return a copy of the sapp_desc structure
@@ -1738,6 +1742,8 @@ sapp_range :: struct {
 sapp_image_desc :: struct {
     width : s32;
     height : s32;
+    cursor_hotspot_x : s32;
+    cursor_hotspot_y : s32;
     pixels : sapp_range;
 }
 
@@ -1779,6 +1785,7 @@ sapp_log_item :: enum u32 {
     WIN32_REGISTER_RAW_INPUT_DEVICES_FAILED_MOUSE_LOCK;
     WIN32_REGISTER_RAW_INPUT_DEVICES_FAILED_MOUSE_UNLOCK;
     WIN32_GET_RAW_INPUT_DATA_FAILED;
+    WIN32_DESTROYICON_FOR_CURSOR_FAILED;
     LINUX_GLX_LOAD_LIBGL_FAILED;
     LINUX_GLX_LOAD_ENTRY_POINTS_FAILED;
     LINUX_GLX_EXTENSION_NOT_FOUND;
@@ -1950,5 +1957,21 @@ sapp_mouse_cursor :: enum u32 {
     RESIZE_NESW;
     RESIZE_ALL;
     NOT_ALLOWED;
+    CUSTOM_0;
+    CUSTOM_1;
+    CUSTOM_2;
+    CUSTOM_3;
+    CUSTOM_4;
+    CUSTOM_5;
+    CUSTOM_6;
+    CUSTOM_7;
+    CUSTOM_8;
+    CUSTOM_9;
+    CUSTOM_10;
+    CUSTOM_11;
+    CUSTOM_12;
+    CUSTOM_13;
+    CUSTOM_14;
+    CUSTOM_15;
 }
 
