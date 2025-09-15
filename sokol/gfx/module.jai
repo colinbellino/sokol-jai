@@ -55,15 +55,10 @@
     On Windows, SOKOL_DLL will define SOKOL_GFX_API_DECL as __declspec(dllexport)
     or __declspec(dllimport) as needed.
 
-    If you want to compile without deprecated structs and functions,
-    define:
-
-    SOKOL_NO_DEPRECATED
-
     Optionally define the following to force debug checks and validations
     even in release mode:
 
-    SOKOL_DEBUG - by default this is defined if _DEBUG is defined
+    SOKOL_DEBUG - by default this is defined if NDEBUG is not defined
 
     Link with the following system libraries (note that sokol_app.h has
     additional linker requirements):
@@ -2220,7 +2215,6 @@ MAX_COLOR_ATTACHMENTS :: 4;
 MAX_UNIFORMBLOCK_MEMBERS :: 16;
 MAX_VERTEX_ATTRIBUTES :: 16;
 MAX_MIPMAPS :: 16;
-MAX_TEXTUREARRAY_LAYERS :: 128;
 MAX_VERTEXBUFFER_BINDSLOTS :: 8;
 MAX_UNIFORMBLOCK_BINDSLOTS :: 8;
 MAX_VIEW_BINDSLOTS :: 28;
@@ -2514,21 +2508,6 @@ sg_sampler_type :: enum u32 {
     FILTERING;
     NONFILTERING;
     COMPARISON;
-}
-
-/*
-    sg_cube_face
-
-    The cubemap faces. Use these as indices in the sg_image_desc.content
-    array.
-*/
-sg_cube_face :: enum u32 {
-    POS_X;
-    NEG_X;
-    POS_Y;
-    NEG_Y;
-    POS_Z;
-    NEG_Z;
 }
 
 /*
@@ -3089,7 +3068,7 @@ sg_view_type :: enum u32 {
 }
 
 sg_image_data :: struct {
-    subimage : [6][16]sg_range;
+    mip_levels : [16]sg_range;
 }
 
 sg_image_desc :: struct {
@@ -3917,6 +3896,11 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDATA_DATA_SIZE;
     VALIDATE_IMAGEDESC_CANARY;
     VALIDATE_IMAGEDESC_IMMUTABLE_DYNAMIC_STREAM;
+    VALIDATE_IMAGEDESC_IMAGETYPE_2D_NUMSLICES;
+    VALIDATE_IMAGEDESC_IMAGETYPE_CUBE_NUMSLICES;
+    VALIDATE_IMAGEDESC_IMAGETYPE_ARRAY_NUMSLICES;
+    VALIDATE_IMAGEDESC_IMAGETYPE_3D_NUMSLICES;
+    VALIDATE_IMAGEDESC_NUMSLICES;
     VALIDATE_IMAGEDESC_WIDTH;
     VALIDATE_IMAGEDESC_HEIGHT;
     VALIDATE_IMAGEDESC_NONRT_PIXELFORMAT;
