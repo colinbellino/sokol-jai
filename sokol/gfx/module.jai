@@ -3736,6 +3736,15 @@ sg_frame_stats_wgpu :: struct {
     bindings : sg_frame_stats_wgpu_bindings;
 }
 
+sg_resource_stats :: struct {
+    total_alive : u32;
+    total_free : u32;
+    allocated : u32;
+    deallocated : u32;
+    inited : u32;
+    uninited : u32;
+}
+
 sg_frame_stats :: struct {
     frame_index : u32;
     num_passes : u32;
@@ -3753,6 +3762,12 @@ sg_frame_stats :: struct {
     size_update_buffer : u32;
     size_append_buffer : u32;
     size_update_image : u32;
+    buffers : sg_resource_stats;
+    images : sg_resource_stats;
+    samplers : sg_resource_stats;
+    views : sg_resource_stats;
+    shaders : sg_resource_stats;
+    pipelines : sg_resource_stats;
     gl : sg_frame_stats_gl;
     d3d11 : sg_frame_stats_d3d11;
     metal : sg_frame_stats_metal;
