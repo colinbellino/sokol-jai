@@ -205,6 +205,23 @@
         containing per-instance data must be bound, and the num_instances parameter
         must be > 1.
 
+        Alternatively, call:
+
+            sg_draw_ex(...)
+
+        to provide a base-vertex and/or base-instance which allows to render
+        from different sections of a vertex buffer without rebinding the
+        vertex buffer with a different offset. Note that the `sg_draw_ex()`
+        only has limited portability on OpenGL, check the sg_limits struct
+        members .draw_base_vertex and .draw_base_instance for runtime support,
+        those are generally true on non-GL-backends, and on GL the feature
+        flags are set according to the GL version:
+
+            - on GL base_instance != 0 is only supported since GL 4.2
+            - on GLES3.x, base_instance != 0 is not supported
+            - on GLES3.x, base_vertex is only supported since GLES3.2
+              (e.g. not supported on WebGL2)
+
     --- ...or kick of a dispatch call to invoke a compute shader workload:
 
             sg_dispatch(int num_groups_x, int num_groups_y, int num_groups_z)
@@ -2028,6 +2045,7 @@ sg_apply_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
 sg_apply_bindings :: (bindings: *sg_bindings) -> void #foreign sokol_gfx_clib;
 sg_apply_uniforms :: (ub_slot: s32, data: *sg_range) -> void #foreign sokol_gfx_clib;
 sg_draw :: (base_element: s32, num_elements: s32, num_instances: s32) -> void #foreign sokol_gfx_clib;
+sg_draw_ex :: (base_element: s32, num_elements: s32, num_instances: s32, base_vertex: s32, base_instance: s32) -> void #foreign sokol_gfx_clib;
 sg_dispatch :: (num_groups_x: s32, num_groups_y: s32, num_groups_z: s32) -> void #foreign sokol_gfx_clib;
 sg_end_pass :: () -> void #foreign sokol_gfx_clib;
 sg_commit :: () -> void #foreign sokol_gfx_clib;
@@ -2385,6 +2403,8 @@ sg_features :: struct {
     compute : bool;
     msaa_texture_bindings : bool;
     separate_buffer_types : bool;
+    draw_base_vertex : bool;
+    draw_base_instance : bool;
     gl_texture_views : bool;
 }
 
@@ -3522,6 +3542,7 @@ sg_trace_hooks :: struct {
     apply_bindings : (a0: *sg_bindings, a1: *void) #c_call;
     apply_uniforms : (a0: s32, a1: *sg_range, a2: *void) #c_call;
     draw : (a0: s32, a1: s32, a2: s32, a3: *void) #c_call;
+    draw_ex : (a0: s32, a1: s32, a2: s32, a3: s32, a4: s32, a5: *void) #c_call;
     dispatch : (a0: s32, a1: s32, a2: s32, a3: *void) #c_call;
     end_pass : (a0: *void) #c_call;
     commit : (a0: *void) #c_call;
@@ -3765,6 +3786,7 @@ sg_frame_stats :: struct {
     num_apply_bindings : u32;
     num_apply_uniforms : u32;
     num_draw : u32;
+    num_draw_ex : u32;
     num_dispatch : u32;
     num_update_buffer : u32;
     num_append_buffer : u32;
@@ -4176,9 +4198,18 @@ sg_log_item :: enum u32 {
     VALIDATE_AU_NO_UNIFORMBLOCK_AT_SLOT;
     VALIDATE_AU_SIZE;
     VALIDATE_DRAW_RENDERPASS_EXPECTED;
-    VALIDATE_DRAW_BASEELEMENT;
-    VALIDATE_DRAW_NUMELEMENTS;
-    VALIDATE_DRAW_NUMINSTANCES;
+    VALIDATE_DRAW_BASEELEMENT_GE_ZERO;
+    VALIDATE_DRAW_NUMELEMENTS_GE_ZERO;
+    VALIDATE_DRAW_NUMINSTANCES_GE_ZERO;
+    VALIDATE_DRAW_EX_RENDERPASS_EXPECTED;
+    VALIDATE_DRAW_EX_BASEELEMENT_GE_ZERO;
+    VALIDATE_DRAW_EX_NUMELEMENTS_GE_ZERO;
+    VALIDATE_DRAW_EX_NUMINSTANCES_GE_ZERO;
+    VALIDATE_DRAW_EX_BASEINSTANCE_GE_ZERO;
+    VALIDATE_DRAW_EX_BASEVERTEX_VS_INDEXED;
+    VALIDATE_DRAW_EX_BASEINSTANCE_VS_INSTANCED;
+    VALIDATE_DRAW_EX_BASEVERTEX_NOT_SUPPORTED;
+    VALIDATE_DRAW_EX_BASEINSTANCE_NOT_SUPPORTED;
     VALIDATE_DRAW_REQUIRED_BINDINGS_OR_UNIFORMS_MISSING;
     VALIDATE_DISPATCH_COMPUTEPASS_EXPECTED;
     VALIDATE_DISPATCH_NUMGROUPSX;
