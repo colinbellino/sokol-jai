@@ -1402,9 +1402,9 @@ sapp_height :: () -> s32 #foreign sokol_app_clib;
 // same as sapp_height(), but returns float
 sapp_heightf :: () -> float #foreign sokol_app_clib;
 // get default framebuffer color pixel format
-sapp_color_format :: () -> s32 #foreign sokol_app_clib;
+sapp_color_format :: () -> sapp_pixel_format #foreign sokol_app_clib;
 // get default framebuffer depth pixel format
-sapp_depth_format :: () -> s32 #foreign sokol_app_clib;
+sapp_depth_format :: () -> sapp_pixel_format #foreign sokol_app_clib;
 // get default framebuffer sample count
 sapp_sample_count :: () -> s32 #foreign sokol_app_clib;
 // returns true when high_dpi was requested and actually running in a high-dpi scenario
@@ -1465,6 +1465,10 @@ sapp_get_num_dropped_files :: () -> s32 #foreign sokol_app_clib;
 sapp_get_dropped_file_path :: (index: s32) -> *u8 #foreign sokol_app_clib;
 // special run-function for SOKOL_NO_ENTRY (in standard mode this is an empty stub)
 sapp_run :: (desc: *sapp_desc) -> void #foreign sokol_app_clib;
+// get runtime environment information
+sapp_get_environment :: () -> sapp_environment #foreign sokol_app_clib;
+// get current frame's swapchain information (call once per frame!)
+sapp_get_swapchain :: () -> sapp_swapchain #foreign sokol_app_clib;
 // EGL: get EGLDisplay object
 sapp_egl_get_display :: () -> *void #foreign sokol_app_clib;
 // EGL: get EGLContext object
@@ -1475,42 +1479,14 @@ sapp_html5_ask_leave_site :: (ask: bool) -> void #foreign sokol_app_clib;
 sapp_html5_get_dropped_file_size :: (index: s32) -> u32 #foreign sokol_app_clib;
 // HTML5: asynchronously load the content of a dropped file
 sapp_html5_fetch_dropped_file :: (request: *sapp_html5_fetch_request) -> void #foreign sokol_app_clib;
-// Metal: get bridged pointer to Metal device object
-sapp_metal_get_device :: () -> *void #foreign sokol_app_clib;
-// Metal: get bridged pointer to MTKView's current drawable of type CAMetalDrawable
-sapp_metal_get_current_drawable :: () -> *void #foreign sokol_app_clib;
-// Metal: get bridged pointer to MTKView's depth-stencil texture of type MTLTexture
-sapp_metal_get_depth_stencil_texture :: () -> *void #foreign sokol_app_clib;
-// Metal: get bridged pointer to MTKView's msaa-color-texture of type MTLTexture (may be null)
-sapp_metal_get_msaa_color_texture :: () -> *void #foreign sokol_app_clib;
 // macOS: get bridged pointer to macOS NSWindow
 sapp_macos_get_window :: () -> *void #foreign sokol_app_clib;
 // iOS: get bridged pointer to iOS UIWindow
 sapp_ios_get_window :: () -> *void #foreign sokol_app_clib;
-// D3D11: get pointer to ID3D11Device object
-sapp_d3d11_get_device :: () -> *void #foreign sokol_app_clib;
-// D3D11: get pointer to ID3D11DeviceContext object
-sapp_d3d11_get_device_context :: () -> *void #foreign sokol_app_clib;
 // D3D11: get pointer to IDXGISwapChain object
 sapp_d3d11_get_swap_chain :: () -> *void #foreign sokol_app_clib;
-// D3D11: get pointer to ID3D11RenderTargetView object for rendering
-sapp_d3d11_get_render_view :: () -> *void #foreign sokol_app_clib;
-// D3D11: get pointer ID3D11RenderTargetView object for msaa-resolve (may return null)
-sapp_d3d11_get_resolve_view :: () -> *void #foreign sokol_app_clib;
-// D3D11: get pointer ID3D11DepthStencilView
-sapp_d3d11_get_depth_stencil_view :: () -> *void #foreign sokol_app_clib;
 // Win32: get the HWND window handle
 sapp_win32_get_hwnd :: () -> *void #foreign sokol_app_clib;
-// WebGPU: get WGPUDevice handle
-sapp_wgpu_get_device :: () -> *void #foreign sokol_app_clib;
-// WebGPU: get swapchain's WGPUTextureView handle for rendering
-sapp_wgpu_get_render_view :: () -> *void #foreign sokol_app_clib;
-// WebGPU: get swapchain's MSAA-resolve WGPUTextureView (may return null)
-sapp_wgpu_get_resolve_view :: () -> *void #foreign sokol_app_clib;
-// WebGPU: get swapchain's WGPUTextureView for the depth-stencil surface
-sapp_wgpu_get_depth_stencil_view :: () -> *void #foreign sokol_app_clib;
-// GL: get framebuffer object
-sapp_gl_get_framebuffer :: () -> u32 #foreign sokol_app_clib;
 // GL: get major version
 sapp_gl_get_major_version :: () -> s32 #foreign sokol_app_clib;
 // GL: get minor version
@@ -1890,14 +1866,162 @@ sapp_log_item :: enum u32 {
     WGPU_REQUEST_ADAPTER_STATUS_ERROR;
     WGPU_REQUEST_ADAPTER_STATUS_UNKNOWN;
     WGPU_CREATE_INSTANCE_FAILED;
+    VULKAN_ALLOC_DEVICE_MEMORY_NO_SUITABLE_MEMORY_TYPE;
+    VULKAN_ALLOCATE_MEMORY_FAILED;
+    VULKAN_CREATE_INSTANCE_FAILED;
+    VULKAN_ENUMERATE_PHYSICAL_DEVICES_FAILED;
+    VULKAN_NO_PHYSICAL_DEVICES_FOUND;
+    VULKAN_NO_SUITABLE_PHYSICAL_DEVICE_FOUND;
+    VULKAN_CREATE_DEVICE_FAILED_EXTENSION_NOT_PRESENT;
+    VULKAN_CREATE_DEVICE_FAILED_FEATURE_NOT_PRESENT;
+    VULKAN_CREATE_DEVICE_FAILED_INITIALIZATION_FAILED;
+    VULKAN_CREATE_DEVICE_FAILED_OTHER;
+    VULKAN_CREATE_SURFACE_FAILED;
+    VULKAN_CREATE_SWAPCHAIN_FAILED;
+    VULKAN_SWAPCHAIN_CREATE_IMAGE_VIEW_FAILED;
+    VULKAN_SWAPCHAIN_CREATE_IMAGE_FAILED;
+    VULKAN_SWAPCHAIN_ALLOC_IMAGE_DEVICE_MEMORY_FAILED;
+    VULKAN_SWAPCHAIN_BIND_IMAGE_MEMORY_FAILED;
+    VULKAN_ACQUIRE_NEXT_IMAGE_FAILED;
+    VULKAN_QUEUE_PRESENT_FAILED;
     IMAGE_DATA_SIZE_MISMATCH;
     DROPPED_FILE_PATH_TOO_LONG;
     CLIPBOARD_STRING_TOO_BIG;
 }
 
+/*
+    sapp_pixel_format
+
+    Defines the pixel format for swapchain surfaces.
+
+    NOTE: when using sokol_gfx.h do not assume that the underlying
+    values are compatible with sg_pixel_format!
+*/
+sapp_pixel_format :: enum u32 {
+    DEFAULT;
+    NONE;
+    RGBA8;
+    SRGB8A8;
+    BGRA8;
+    SBGRA8;
+    DEPTH;
+    DEPTH_STENCIL;
+}
+
+sapp_environment_defaults :: struct {
+    color_format : sapp_pixel_format;
+    depth_format : sapp_pixel_format;
+    sample_count : s32;
+}
+
+sapp_metal_environment :: struct {
+    device : *void;
+}
+
+sapp_d3d11_environment :: struct {
+    device : *void;
+    device_context : *void;
+}
+
+sapp_wgpu_environment :: struct {
+    device : *void;
+}
+
+sapp_vulkan_environment :: struct {
+    physical_device : *void;
+    device : *void;
+    queue : *void;
+    queue_family_index : u32;
+}
+
+sapp_environment :: struct {
+    defaults : sapp_environment_defaults;
+    metal : sapp_metal_environment;
+    d3d11 : sapp_d3d11_environment;
+    wgpu : sapp_wgpu_environment;
+    vulkan : sapp_vulkan_environment;
+}
+
+sapp_metal_swapchain :: struct {
+    current_drawable : *void;
+    depth_stencil_texture : *void;
+    msaa_color_texture : *void;
+}
+
+sapp_d3d11_swapchain :: struct {
+    render_view : *void;
+    resolve_view : *void;
+    depth_stencil_view : *void;
+}
+
+sapp_wgpu_swapchain :: struct {
+    render_view : *void;
+    resolve_view : *void;
+    depth_stencil_view : *void;
+}
+
+sapp_vulkan_swapchain :: struct {
+    render_image : *void;
+    render_view : *void;
+    resolve_image : *void;
+    resolve_view : *void;
+    depth_stencil_image : *void;
+    depth_stencil_view : *void;
+    render_finished_semaphore : *void;
+    present_complete_semaphore : *void;
+}
+
+sapp_gl_swapchain :: struct {
+    framebuffer : u32;
+}
+
+sapp_swapchain :: struct {
+    width : s32;
+    height : s32;
+    sample_count : s32;
+    color_format : sapp_pixel_format;
+    depth_format : sapp_pixel_format;
+    metal : sapp_metal_swapchain;
+    d3d11 : sapp_d3d11_swapchain;
+    wgpu : sapp_wgpu_swapchain;
+    vulkan : sapp_vulkan_swapchain;
+    gl : sapp_gl_swapchain;
+}
+
 sapp_logger :: struct {
     func : (a0: *u8, a1: u32, a2: u32, a3: *u8, a4: u32, a5: *u8, a6: *void) #c_call;
     user_data : *void;
+}
+
+sapp_gl_desc :: struct {
+    major_version : s32;
+    minor_version : s32;
+}
+
+sapp_win32_desc :: struct {
+    console_utf8 : bool;
+    console_create : bool;
+    console_attach : bool;
+}
+
+sapp_html5_desc :: struct {
+    canvas_selector : *u8;
+    canvas_resize : bool;
+    preserve_drawing_buffer : bool;
+    premultiplied_alpha : bool;
+    ask_leave_site : bool;
+    update_document_title : bool;
+    bubble_mouse_events : bool;
+    bubble_touch_events : bool;
+    bubble_wheel_events : bool;
+    bubble_key_events : bool;
+    bubble_char_events : bool;
+    use_emsc_set_main_loop : bool;
+    emsc_set_main_loop_simulate_infinite_loop : bool;
+}
+
+sapp_ios_desc :: struct {
+    keyboard_resizes_canvas : bool;
 }
 
 sapp_desc :: struct {
@@ -1926,25 +2050,10 @@ sapp_desc :: struct {
     icon : sapp_icon_desc;
     allocator : sapp_allocator;
     logger : sapp_logger;
-    gl_major_version : s32;
-    gl_minor_version : s32;
-    win32_console_utf8 : bool;
-    win32_console_create : bool;
-    win32_console_attach : bool;
-    html5_canvas_selector : *u8;
-    html5_canvas_resize : bool;
-    html5_preserve_drawing_buffer : bool;
-    html5_premultiplied_alpha : bool;
-    html5_ask_leave_site : bool;
-    html5_update_document_title : bool;
-    html5_bubble_mouse_events : bool;
-    html5_bubble_touch_events : bool;
-    html5_bubble_wheel_events : bool;
-    html5_bubble_key_events : bool;
-    html5_bubble_char_events : bool;
-    html5_use_emsc_set_main_loop : bool;
-    html5_emsc_set_main_loop_simulate_infinite_loop : bool;
-    ios_keyboard_resizes_canvas : bool;
+    gl : sapp_gl_desc;
+    win32 : sapp_win32_desc;
+    html5 : sapp_html5_desc;
+    ios : sapp_ios_desc;
 }
 
 /*
