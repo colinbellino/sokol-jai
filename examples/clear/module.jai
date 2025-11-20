@@ -29,6 +29,7 @@ init :: () #c_call {
         case .METAL_IOS; #through;
         case .METAL_SIMULATOR; print(">> using Metal backend");
         case .WGPU; print(">> using WebGPU backend");
+        case .VULKAN; print(">> using Vulkan backend");
         case .DUMMY; print(">> using dummy backend");
     }
 }
