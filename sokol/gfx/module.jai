@@ -416,12 +416,12 @@
             sg_image sg_query_view_image(sg_view view)
             sg_buffer sg_query_view_buffer(sg_view view)
 
-    --- you can query frame stats and control stats collection via:
+    --- you can query stats and control stats collection via:
 
-            sg_query_frame_stats()
-            sg_enable_frame_stats()
-            sg_disable_frame_stats()
-            sg_frame_stats_enabled()
+            sg_query_stats()
+            sg_enable_stats()
+            sg_disable_stats()
+            sg_stats_enabled()
 
     --- you can ask at runtime what backend sokol_gfx.h has been compiled for:
 
@@ -1870,7 +1870,7 @@
       cache is defined in sg_desc.wgpu.bindgroups_cache_size when calling
       sg_setup. The cache size must be a power-of-2 number, with the default being
       1024. The bindgroups cache behaviour can be observed by calling the new
-      function sg_query_frame_stats(), where the following struct items are
+      function sg_query_stats(), where the following struct items are
       of interest:
 
         .wgpu.num_bindgroup_cache_hits
@@ -2131,11 +2131,11 @@ sg_fail_sampler :: (smp: sg_sampler) -> void #foreign sokol_gfx_clib;
 sg_fail_shader :: (shd: sg_shader) -> void #foreign sokol_gfx_clib;
 sg_fail_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
 sg_fail_view :: (view: sg_view) -> void #foreign sokol_gfx_clib;
-// frame stats
-sg_enable_frame_stats :: () -> void #foreign sokol_gfx_clib;
-sg_disable_frame_stats :: () -> void #foreign sokol_gfx_clib;
-sg_frame_stats_enabled :: () -> bool #foreign sokol_gfx_clib;
-sg_query_frame_stats :: () -> sg_frame_stats #foreign sokol_gfx_clib;
+// frame and total stats
+sg_enable_stats :: () -> void #foreign sokol_gfx_clib;
+sg_disable_stats :: () -> void #foreign sokol_gfx_clib;
+sg_stats_enabled :: () -> bool #foreign sokol_gfx_clib;
+sg_query_stats :: () -> sg_stats #foreign sokol_gfx_clib;
 // D3D11: return ID3D11Device
 sg_d3d11_device :: () -> *void #foreign sokol_gfx_clib;
 // D3D11: return ID3D11DeviceContext
@@ -3801,13 +3801,29 @@ sg_frame_stats_vk :: struct {
     size_descriptor_buffer_writes : u32;
 }
 
-sg_resource_stats :: struct {
-    total_alive : u32;
-    total_free : u32;
+sg_frame_resource_stats :: struct {
     allocated : u32;
     deallocated : u32;
     inited : u32;
     uninited : u32;
+}
+
+sg_total_resource_stats :: struct {
+    alive : u32;
+    free : u32;
+    allocated : u32;
+    deallocated : u32;
+    inited : u32;
+    uninited : u32;
+}
+
+sg_total_stats :: struct {
+    buffers : sg_total_resource_stats;
+    images : sg_total_resource_stats;
+    samplers : sg_total_resource_stats;
+    views : sg_total_resource_stats;
+    shaders : sg_total_resource_stats;
+    pipelines : sg_total_resource_stats;
 }
 
 sg_frame_stats :: struct {
@@ -3828,17 +3844,23 @@ sg_frame_stats :: struct {
     size_update_buffer : u32;
     size_append_buffer : u32;
     size_update_image : u32;
-    buffers : sg_resource_stats;
-    images : sg_resource_stats;
-    samplers : sg_resource_stats;
-    views : sg_resource_stats;
-    shaders : sg_resource_stats;
-    pipelines : sg_resource_stats;
+    buffers : sg_frame_resource_stats;
+    images : sg_frame_resource_stats;
+    samplers : sg_frame_resource_stats;
+    views : sg_frame_resource_stats;
+    shaders : sg_frame_resource_stats;
+    pipelines : sg_frame_resource_stats;
     gl : sg_frame_stats_gl;
     d3d11 : sg_frame_stats_d3d11;
     metal : sg_frame_stats_metal;
     wgpu : sg_frame_stats_wgpu;
     vk : sg_frame_stats_vk;
+}
+
+sg_stats :: struct {
+    prev_frame : sg_frame_stats;
+    cur_frame : sg_frame_stats;
+    total : sg_total_stats;
 }
 
 sg_log_item :: enum u32 {
