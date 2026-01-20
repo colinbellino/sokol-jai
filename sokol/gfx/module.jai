@@ -2172,6 +2172,8 @@ sg_mtl_device :: () -> *void #foreign sokol_gfx_clib;
 sg_mtl_render_command_encoder :: () -> *void #foreign sokol_gfx_clib;
 // Metal: return __bridge-casted MTLComputeCommandEncoder when inside compute pass (otherwise zero)
 sg_mtl_compute_command_encoder :: () -> *void #foreign sokol_gfx_clib;
+// Metal: return __bridge-casted MTLCommandQueue
+sg_mtl_command_queue :: () -> *void #foreign sokol_gfx_clib;
 // Metal: get internal __bridge-casted buffer resource objects
 sg_mtl_query_buffer_info :: (buf: sg_buffer) -> sg_mtl_buffer_info #foreign sokol_gfx_clib;
 // Metal: get internal __bridge-casted image resource objects
