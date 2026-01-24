@@ -1880,6 +1880,7 @@ sapp_log_item :: enum u32 {
     WGPU_REQUEST_ADAPTER_STATUS_ERROR;
     WGPU_REQUEST_ADAPTER_STATUS_UNKNOWN;
     WGPU_CREATE_INSTANCE_FAILED;
+    VULKAN_REQUIRED_INSTANCE_EXTENSION_FUNCTION_MISSING;
     VULKAN_ALLOC_DEVICE_MEMORY_NO_SUITABLE_MEMORY_TYPE;
     VULKAN_ALLOCATE_MEMORY_FAILED;
     VULKAN_CREATE_INSTANCE_FAILED;
@@ -1942,6 +1943,7 @@ sapp_wgpu_environment :: struct {
 }
 
 sapp_vulkan_environment :: struct {
+    instance : *void;
     physical_device : *void;
     device : *void;
     queue : *void;

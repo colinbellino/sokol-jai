@@ -4361,6 +4361,7 @@ sg_wgpu_environment :: struct {
 }
 
 sg_vulkan_environment :: struct {
+    instance : *void;
     physical_device : *void;
     device : *void;
     queue : *void;
