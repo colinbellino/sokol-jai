@@ -2423,6 +2423,7 @@ sg_features :: struct {
     separate_buffer_types : bool;
     draw_base_vertex : bool;
     draw_base_instance : bool;
+    dual_source_blending : bool;
     gl_texture_views : bool;
 }
 
@@ -2887,6 +2888,10 @@ sg_blend_factor :: enum u32 {
     ONE_MINUS_BLEND_COLOR;
     BLEND_ALPHA;
     ONE_MINUS_BLEND_ALPHA;
+    SRC1_COLOR;
+    ONE_MINUS_SRC1_COLOR;
+    SRC1_ALPHA;
+    ONE_MINUS_SRC1_ALPHA;
 }
 
 /*
@@ -4156,6 +4161,7 @@ sg_log_item :: enum u32 {
     VALIDATE_PIPELINEDESC_ATTR_SEMANTICS;
     VALIDATE_PIPELINEDESC_SHADER_READONLY_STORAGEBUFFERS;
     VALIDATE_PIPELINEDESC_BLENDOP_MINMAX_REQUIRES_BLENDFACTOR_ONE;
+    VALIDATE_PIPELINEDESC_DUAL_SOURCE_BLENDING_NOT_SUPPORTED;
     VALIDATE_VIEWDESC_CANARY;
     VALIDATE_VIEWDESC_UNIQUE_VIEWTYPE;
     VALIDATE_VIEWDESC_ANY_VIEWTYPE;
