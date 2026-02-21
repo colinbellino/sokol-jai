@@ -2001,7 +2001,7 @@ else #if OS == .MACOS {
                 else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_x64_gl_release"; }
             }
         } else {
-            #library,link_always "../../libclang_rt.osx"; #system_library,link_always "Cocoa"; #system_library,link_always "QuartzCore"; #system_library,link_always "Metal"; #system_library,link_always "MetalKit";
+            #library,link_always "../../libclang_rt.osx"; #system_library,link_always "Cocoa"; #system_library,link_always "QuartzCore"; #system_library,link_always "Metal";
             #if CPU == .ARM64 {
                 #if  DEBUG { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_metal_debug";   }
                 else       { sokol_gfx_clib :: #library,no_dll "sokol_gfx_macos_arm64_metal_release"; }
@@ -4552,4 +4552,3 @@ sg_gl_view_info :: struct {
     msaa_render_buffer : u32;
     msaa_resolve_frame_buffer : u32;
 }
-

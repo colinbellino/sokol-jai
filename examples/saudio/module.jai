@@ -19,7 +19,7 @@ state: struct {
     samples:     [NUM_SAMPLES]float;
 } = .{
     pass_action = .{
-        colors = .[ .{ load_action = .CLEAR, clear_value = .{ 1.0, 0.5, 0.0, 1.0 }, }, .{}, .{}, .{}, ],
+        colors = .[ .{ load_action = .CLEAR, clear_value = .{ 1.0, 0.5, 0.0, 1.0 }, }, .{}, .{}, .{}, .{}, .{}, .{}, .{} ],
     },
 };
 

@@ -1,6 +1,6 @@
 set -e
 
-FRAMEWORKS_METAL="-framework Metal -framework MetalKit"
+FRAMEWORKS_METAL="-framework Metal"
 FRAMEWORKS_OPENGL="-framework OpenGL"
 FRAMEWORKS_CORE="-framework Foundation -framework CoreGraphics -framework Cocoa -framework QuartzCore -framework CoreAudio -framework AudioToolbox"
 

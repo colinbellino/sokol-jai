@@ -23,7 +23,7 @@ state: struct {
     pass_action = .{
         colors = .[
             .{ load_action = .CLEAR, clear_value = .{ 0.0, 0.125, 0.25, 1.0 } },
-            .{}, .{}, .{},
+            .{}, .{}, .{}, .{}, .{}, .{}, .{}
         ],
     },
     palette = .[

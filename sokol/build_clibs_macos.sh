@@ -10,7 +10,7 @@ build_lib_arm64_release() {
     dst=$2
     backend=$3
     echo $dst
-    MACOSX_DEPLOYMENT_TARGET=10.13 cc -c -O2 -x objective-c -arch arm64 -DNDEBUG -DIMPL -D$backend c/$src.c
+    MACOSX_DEPLOYMENT_TARGET=14.0 cc -c -O2 -x objective-c -arch arm64 -DNDEBUG -DIMPL -D$backend c/$src.c
     ar rcs $dst.a $src.o
 }
 
@@ -22,7 +22,7 @@ build_lib_arm64_debug() {
     dst=$2
     backend=$3
     echo $dst
-    MACOSX_DEPLOYMENT_TARGET=10.13 cc -c -g -x objective-c -arch arm64 -DIMPL -D$backend c/$src.c
+    MACOSX_DEPLOYMENT_TARGET=14.0 cc -c -g -x objective-c -arch arm64 -DIMPL -D$backend c/$src.c
     ar rcs $dst.a $src.o
 }
 
@@ -31,7 +31,7 @@ build_lib_x64_release() {
     dst=$2
     backend=$3
     echo $dst
-    MACOSX_DEPLOYMENT_TARGET=10.13 cc -c -O2 -x objective-c -arch x86_64 -DNDEBUG -DIMPL -D$backend c/$src.c
+    MACOSX_DEPLOYMENT_TARGET=14.0 cc -c -O2 -x objective-c -arch x86_64 -DNDEBUG -DIMPL -D$backend c/$src.c
     ar rcs $dst.a $src.o
 }
 
@@ -40,7 +40,7 @@ build_lib_x64_debug() {
     dst=$2
     backend=$3
     echo $dst
-    MACOSX_DEPLOYMENT_TARGET=10.13 cc -c -g -x objective-c -arch x86_64 -DIMPL -D$backend c/$src.c
+    MACOSX_DEPLOYMENT_TARGET=14.0 cc -c -g -x objective-c -arch x86_64 -DIMPL -D$backend c/$src.c
     ar rcs $dst.a $src.o
 }
 
