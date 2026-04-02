@@ -287,8 +287,11 @@
             in more strongly typed languages than C and C++.
 
         double sapp_frame_duration(void)
-            Returns the frame duration in seconds averaged over a number of
-            frames to smooth out any jittering spikes.
+            Returns a smoothed frame duration.
+
+        double sapp_frame_duration_unfiltered(void)
+            Returns the unfiltered frame duration with varying degree of
+            jitter (depending on platform and backend).
 
         int sapp_color_format(void)
         int sapp_depth_format(void)
@@ -1465,6 +1468,8 @@ sapp_consume_event :: () -> void #foreign sokol_app_clib;
 sapp_frame_count :: () -> u64 #foreign sokol_app_clib;
 // get an averaged/smoothed frame duration in seconds
 sapp_frame_duration :: () -> float64 #foreign sokol_app_clib;
+// get 'raw' unfiltered frame duration in seconds
+sapp_frame_duration_unfiltered :: () -> float64 #foreign sokol_app_clib;
 // write string into clipboard
 sapp_set_clipboard_string :: (str: *u8) -> void #foreign sokol_app_clib;
 // read string from clipboard (usually during SAPP_EVENTTYPE_CLIPBOARD_PASTED)
