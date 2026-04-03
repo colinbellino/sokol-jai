@@ -2424,6 +2424,7 @@ sg_features :: struct {
     draw_base_vertex : bool;
     draw_base_instance : bool;
     dual_source_blending : bool;
+    vertexformat_int10_n2 : bool;
     gl_texture_views : bool;
 }
 
@@ -2670,6 +2671,7 @@ sg_vertex_format :: enum u32 {
     SHORT4N;
     USHORT4;
     USHORT4N;
+    INT10_N2;
     UINT10_N2;
     HALF2;
     HALF4;
@@ -4157,6 +4159,7 @@ sg_log_item :: enum u32 {
     VALIDATE_PIPELINEDESC_NO_COMPUTE_SHADER_EXPECTED;
     VALIDATE_PIPELINEDESC_NO_CONT_ATTRS;
     VALIDATE_PIPELINEDESC_ATTR_BASETYPE_MISMATCH;
+    VALIDATE_PIPELINEDESC_ATTR_VERTEXFORMAT_INT10_N2_NOT_SUPPORTED;
     VALIDATE_PIPELINEDESC_LAYOUT_STRIDE4;
     VALIDATE_PIPELINEDESC_ATTR_SEMANTICS;
     VALIDATE_PIPELINEDESC_SHADER_READONLY_STORAGEBUFFERS;
