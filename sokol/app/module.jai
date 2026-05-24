@@ -2001,6 +2001,7 @@ sapp_gl_swapchain :: struct {
 }
 
 sapp_swapchain :: struct {
+    invalid : bool;
     width : s32;
     height : s32;
     sample_count : s32;
