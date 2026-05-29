@@ -376,8 +376,9 @@
             whether the GL context is a GLES context
 
         const void* sapp_android_get_native_activity(void);
-            On Android, get the native activity ANativeActivity pointer, otherwise
-            a null pointer.
+        const void* sapp_android_get_native_window(void);
+            On Android, get the native activity ANativeActivity pointer,
+            or native window ANativeWindow pointer, otherwise a null pointer.
 
     --- Implement the frame-callback function, this function will be called
         on the same thread as the init callback, but might be on a different
@@ -1518,6 +1519,8 @@ sapp_x11_get_window :: () -> *void #foreign sokol_app_clib;
 sapp_x11_get_display :: () -> *void #foreign sokol_app_clib;
 // Android: get native activity handle
 sapp_android_get_native_activity :: () -> *void #foreign sokol_app_clib;
+// Android: get native window handle
+sapp_android_get_native_window :: () -> *void #foreign sokol_app_clib;
 
 MAX_TOUCHPOINTS :: 8;
 MAX_MOUSEBUTTONS :: 3;
