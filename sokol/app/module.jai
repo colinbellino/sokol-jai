@@ -2073,6 +2073,10 @@ sapp_metal_desc :: struct {
     disable_display_sync : bool;
 }
 
+sapp_android_desc :: struct {
+    native_event_cb : (a0: *void) -> bool #c_call;
+}
+
 sapp_desc :: struct {
     init_cb : () #c_call;
     frame_cb : () #c_call;
@@ -2108,6 +2112,7 @@ sapp_desc :: struct {
     win32 : sapp_win32_desc;
     html5 : sapp_html5_desc;
     ios : sapp_ios_desc;
+    android : sapp_android_desc;
 }
 
 /*
