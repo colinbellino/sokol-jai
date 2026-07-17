@@ -31,7 +31,7 @@ state: struct {
     donut:    sshape_element_range_t;
     sphere:   sshape_element_range_t;
     rx, ry:   float;
-    vertices: [4000]sshape_vertex_t;
+    vertices: [4000 * MAX_VERTEX_SIZE]u8;
     indices:  [24000]u16;
 }
 
@@ -84,30 +84,32 @@ init :: () #c_call {
 
     // a donut shape which is rendered into the offscreen render target, and
     // a sphere shape which is rendered into the default framebuffer
-    buf := sshape_buffer_t.{
+    shp := sshape_state_t.{
         vertices = .{ buffer = .{ ptr = *state.vertices, size = size_of(type_of(state.vertices)) } },
         indices  = .{ buffer = .{ ptr = *state.indices,  size = size_of(type_of(state.indices)) } },
     };
 
-    buf = sshape_build_torus(*buf, *(sshape_torus_t.{
+    sshape_build_torus(*shp, *(sshape_torus_t.{
         radius = 0.5,
         ring_radius = 0.3,
         sides = 20,
         rings = 30,
     }));
-    state.donut = sshape_element_range(*buf);
+    state.donut = sshape_element_range(*shp);
 
-    buf = sshape_build_sphere(*buf, *(sshape_sphere_t.{
+    sshape_build_sphere(*shp, *(sshape_sphere_t.{
         radius = 0.5,
         slices = 72,
         stacks = 40,
     }));
-    state.sphere = sshape_element_range(*buf);
+    state.sphere = sshape_element_range(*shp);
 
-    vbuf := sg_make_buffer(xx,force *sshape_vertex_buffer_desc(*buf));
+    vbuf_desc := sshape_vertex_buffer_desc(*shp);
+    ibuf_desc := sshape_index_buffer_desc(*shp);
+    vbuf := sg_make_buffer(xx,force *vbuf_desc);
     state.offscreen.bind.vertex_buffers[0] = vbuf;
     state.display.bind.vertex_buffers[0] = vbuf;
-    ibuf := sg_make_buffer(xx,force *sshape_index_buffer_desc(*buf));
+    ibuf := sg_make_buffer(xx,force *ibuf_desc);
     state.offscreen.bind.index_buffer = ibuf;
     state.display.bind.index_buffer = ibuf;
 
@@ -124,9 +126,9 @@ init :: () #c_call {
         },
         colors[0] = .{ pixel_format = .RGBA8 },
     };
-    offscreen_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state();
-    offscreen_pip_desc.layout.attrs[ATTR_offscreen_position] = xx,force sshape_position_vertex_attr_state();
-    offscreen_pip_desc.layout.attrs[ATTR_offscreen_normal] = xx,force sshape_normal_vertex_attr_state();
+    offscreen_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state(*shp);
+    offscreen_pip_desc.layout.attrs[ATTR_offscreen_position] = xx,force sshape_position_vertex_attr_state(*shp);
+    offscreen_pip_desc.layout.attrs[ATTR_offscreen_normal] = xx,force sshape_normal_vertex_attr_state(*shp);
     state.offscreen.pip = sg_make_pipeline(*offscreen_pip_desc);
 
     // and another pipeline-state-object for the default pass
@@ -139,10 +141,10 @@ init :: () #c_call {
             write_enabled = true,
         },
     };
-    display_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state();
-    display_pip_desc.layout.attrs[ATTR_default_position] = xx,force sshape_position_vertex_attr_state();
-    display_pip_desc.layout.attrs[ATTR_default_normal] = xx,force sshape_normal_vertex_attr_state();
-    display_pip_desc.layout.attrs[ATTR_default_texcoord0] = xx,force sshape_texcoord_vertex_attr_state();
+    display_pip_desc.layout.buffers[0] = xx,force sshape_vertex_buffer_layout_state(*shp);
+    display_pip_desc.layout.attrs[ATTR_default_position] = xx,force sshape_position_vertex_attr_state(*shp);
+    display_pip_desc.layout.attrs[ATTR_default_normal] = xx,force sshape_normal_vertex_attr_state(*shp);
+    display_pip_desc.layout.attrs[ATTR_default_texcoord0] = xx,force sshape_texcoord_vertex_attr_state(*shp);
     state.display.pip = sg_make_pipeline(*display_pip_desc);
 
     // a sampler object for sampling the render target as texture
