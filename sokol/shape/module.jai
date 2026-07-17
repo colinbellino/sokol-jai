@@ -430,26 +430,28 @@ else #if OS == .MACOS {
 }
 
 // shape builder functions
-sshape_build_plane :: (buf: *sshape_buffer_t, params: *sshape_plane_t) -> sshape_buffer_t #foreign sokol_shape_clib;
-sshape_build_box :: (buf: *sshape_buffer_t, params: *sshape_box_t) -> sshape_buffer_t #foreign sokol_shape_clib;
-sshape_build_sphere :: (buf: *sshape_buffer_t, params: *sshape_sphere_t) -> sshape_buffer_t #foreign sokol_shape_clib;
-sshape_build_cylinder :: (buf: *sshape_buffer_t, params: *sshape_cylinder_t) -> sshape_buffer_t #foreign sokol_shape_clib;
-sshape_build_torus :: (buf: *sshape_buffer_t, params: *sshape_torus_t) -> sshape_buffer_t #foreign sokol_shape_clib;
+sshape_build_plane :: (state: *sshape_state_t, params: *sshape_plane_t) -> void #foreign sokol_shape_clib;
+sshape_build_box :: (state: *sshape_state_t, params: *sshape_box_t) -> void #foreign sokol_shape_clib;
+sshape_build_sphere :: (state: *sshape_state_t, params: *sshape_sphere_t) -> void #foreign sokol_shape_clib;
+sshape_build_cylinder :: (state: *sshape_state_t, params: *sshape_cylinder_t) -> void #foreign sokol_shape_clib;
+sshape_build_torus :: (state: *sshape_state_t, params: *sshape_torus_t) -> void #foreign sokol_shape_clib;
+// compute size of vertex given optional components
+sshape_vertex_size :: (components: *sshape_optional_components_t) -> u64 #foreign sokol_shape_clib;
 // query required vertex- and index-buffer sizes in bytes
-sshape_plane_sizes :: (tiles: u32) -> sshape_sizes_t #foreign sokol_shape_clib;
-sshape_box_sizes :: (tiles: u32) -> sshape_sizes_t #foreign sokol_shape_clib;
-sshape_sphere_sizes :: (slices: u32, stacks: u32) -> sshape_sizes_t #foreign sokol_shape_clib;
-sshape_cylinder_sizes :: (slices: u32, stacks: u32) -> sshape_sizes_t #foreign sokol_shape_clib;
-sshape_torus_sizes :: (sides: u32, rings: u32) -> sshape_sizes_t #foreign sokol_shape_clib;
+sshape_plane_sizes :: (tiles: u32, vertex_size: u64) -> sshape_sizes_t #foreign sokol_shape_clib;
+sshape_box_sizes :: (tiles: u32, vetrex_size: u64) -> sshape_sizes_t #foreign sokol_shape_clib;
+sshape_sphere_sizes :: (slices: u32, stacks: u32, vertex_size: u64) -> sshape_sizes_t #foreign sokol_shape_clib;
+sshape_cylinder_sizes :: (slices: u32, stacks: u32, vertex_size: u64) -> sshape_sizes_t #foreign sokol_shape_clib;
+sshape_torus_sizes :: (sides: u32, rings: u32, vertex_size: u64) -> sshape_sizes_t #foreign sokol_shape_clib;
 // extract sokol-gfx desc structs and primitive ranges from build state
-sshape_element_range :: (buf: *sshape_buffer_t) -> sshape_element_range_t #foreign sokol_shape_clib;
-sshape_vertex_buffer_desc :: (buf: *sshape_buffer_t) -> sg_buffer_desc #foreign sokol_shape_clib;
-sshape_index_buffer_desc :: (buf: *sshape_buffer_t) -> sg_buffer_desc #foreign sokol_shape_clib;
-sshape_vertex_buffer_layout_state :: () -> sg_vertex_buffer_layout_state #foreign sokol_shape_clib;
-sshape_position_vertex_attr_state :: () -> sg_vertex_attr_state #foreign sokol_shape_clib;
-sshape_normal_vertex_attr_state :: () -> sg_vertex_attr_state #foreign sokol_shape_clib;
-sshape_texcoord_vertex_attr_state :: () -> sg_vertex_attr_state #foreign sokol_shape_clib;
-sshape_color_vertex_attr_state :: () -> sg_vertex_attr_state #foreign sokol_shape_clib;
+sshape_element_range :: (state: *sshape_state_t) -> sshape_element_range_t #foreign sokol_shape_clib;
+sshape_vertex_buffer_desc :: (state: *sshape_state_t) -> sg_buffer_desc #foreign sokol_shape_clib;
+sshape_index_buffer_desc :: (state: *sshape_state_t) -> sg_buffer_desc #foreign sokol_shape_clib;
+sshape_vertex_buffer_layout_state :: (state: *sshape_state_t) -> sg_vertex_buffer_layout_state #foreign sokol_shape_clib;
+sshape_position_vertex_attr_state :: (state: *sshape_state_t) -> sg_vertex_attr_state #foreign sokol_shape_clib;
+sshape_normal_vertex_attr_state :: (state: *sshape_state_t) -> sg_vertex_attr_state #foreign sokol_shape_clib;
+sshape_texcoord_vertex_attr_state :: (state: *sshape_state_t) -> sg_vertex_attr_state #foreign sokol_shape_clib;
+sshape_color_vertex_attr_state :: (state: *sshape_state_t) -> sg_vertex_attr_state #foreign sokol_shape_clib;
 // helper functions to build packed color value from floats or bytes
 sshape_color_4f :: (r: float, g: float, b: float, a: float) -> u32 #foreign sokol_shape_clib;
 sshape_color_3f :: (r: float, g: float, b: float) -> u32 #foreign sokol_shape_clib;
@@ -459,7 +461,7 @@ sshape_color_3b :: (r: u8, g: u8, b: u8) -> u32 #foreign sokol_shape_clib;
 sshape_mat4 :: (m: *float) -> sshape_mat4_t #foreign sokol_shape_clib;
 sshape_mat4_transpose :: (m: *float) -> sshape_mat4_t #foreign sokol_shape_clib;
 
-sshape_range :: struct {
+sshape_range_t :: struct {
     ptr : *void;
     size : u64;
 }
@@ -468,14 +470,10 @@ sshape_mat4_t :: struct {
     m : [4][4]float;
 }
 
-sshape_vertex_t :: struct {
-    x : float;
-    y : float;
-    z : float;
-    normal : u32;
-    u : u16;
-    v : u16;
-    color : u32;
+sshape_optional_components_t :: struct {
+    normals : bool;
+    texcoords : bool;
+    colors : bool;
 }
 
 sshape_element_range_t :: struct {
@@ -494,13 +492,14 @@ sshape_sizes_t :: struct {
 }
 
 sshape_buffer_item_t :: struct {
-    buffer : sshape_range;
+    buffer : sshape_range_t;
     data_size : u64;
     shape_offset : u64;
 }
 
-sshape_buffer_t :: struct {
+sshape_state_t :: struct {
     valid : bool;
+    disable : sshape_optional_components_t;
     vertices : sshape_buffer_item_t;
     indices : sshape_buffer_item_t;
 }
