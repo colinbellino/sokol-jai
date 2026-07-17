@@ -466,6 +466,9 @@ sshape_range_t :: struct {
     size : u64;
 }
 
+MIN_VERTEX_SIZE :: 12;
+MAX_VERTEX_SIZE :: 24;
+
 sshape_mat4_t :: struct {
     m : [4][4]float;
 }
