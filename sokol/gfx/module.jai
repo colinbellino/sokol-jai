@@ -72,12 +72,12 @@
     - on Linux with Vulkan: vulkan
     - on Android: GLESv3, log, android
     - on Windows:
-        - with Vulkan: link with vulkan-1 (this is explicit in case you want to
-          use your own Vulkan loader library)
         - with D3D11:
             - on MSVC or Clang: no action needed, libs are defined in-source via pragma-comment-lib
             - on MINGW/MSYS2 gcc: compile with '-mwin32' so that _WIN32 is defined and link with -ld3d11
         - with GL: no linking needed since sokol_gfx.h comes with its own GL loader on Windows
+        - with Vulkan: explicitly link with vulkan-1 (this is explicit in case you want to use
+          your own Vulkan loader)
 
     On macOS and iOS, the implementation must be compiled as Objective-C.
 
@@ -94,6 +94,8 @@
         - for WebGL2: add the linker option `-s USE_WEBGL2=1`
         - for WebGPU: compile and link with `--use-port=emdawnwebgpu`
           (for more exotic situations, read: https://dawn.googlesource.com/dawn/+/refs/heads/main/src/emdawnwebgpu/pkg/README.md)
+          NOTE that you may also need to pass `-sDEFAULT_TO_CXX` to the Emscripten
+          linker when using emdaenwebgpu in C projects.
 
     sokol_gfx DOES NOT:
     ===================
@@ -286,6 +288,21 @@
 
         Note that sg_begin_pass() will reset both the viewport and scissor
         rectangles to cover the entire framebuffer.
+
+    --- to populate immutable buffers and images after creation, call:
+
+            sg_write_buffer_unsealed(const sg_write_buffer_desc* desc)
+            sg_write_image_unsealed(const sg_write_image_desc* desc)
+
+        These are more flexible alternatives to passing the content in the
+        sg_make_buffer or sg_make_image calls. To use these write-unsealed
+        calls, create the buffers and images with usage `desc.usage.write_unsealed = true`,
+        which creates the resource in 'unsealed resource state'.
+        The `sg_write_*_unsealed` functions can only be called on resources
+        in unsealed state. After all data has been initialized, call the
+        functions `sg_seal_buffer()` or `sg_seal_image()` to transition the
+        resource from unsealed into valid state. For more details see the
+        doc section `ON POPULATING IMMUTABLE RESOURCES` below.
 
     --- to update (overwrite) the content of buffer and image resources, call:
 
@@ -1326,6 +1343,154 @@
     to use the sokol-shdc shader cross-compiler tool!
 
 
+    ON POPULATING IMMUTABLE RESOURCES
+    =================================
+    There's two ways to initialize immutable resources (buffers and images)
+    with data:
+
+    1. directly in the sg_make_buffer and sg_make_image calls via the nested
+       structs sg_buffer_desc.data and sg_image_desc.data
+    2. after creation via the sg_write_buffer_unsealed and sg_write_image_unsealed
+       calls
+
+    Passing the initial data (i.e. point (1)) right into the sg_make_buffer and
+    sg_make_image functions is preferred when that data already exists as a data
+    blob with the right data layout in memory, e.g.:
+
+    ```c
+    uint8_t vertex_data[] = { ... };
+    const sg_buffer buf = sg_make_buffer(&(sg_buffer_desc){
+        .data = SG_RANGE(vertex_data),
+    });
+    ```
+
+    ```c
+    uint8_t mip0_data[] = { ... };
+    uint8_t mip1_data[] = { ... };
+    // ... more mip levels
+    const sg_image img = sg_make_image(&(sg_image_desc){
+        .data.mip_levels = {
+            [0] = SG_RANGE(mip0_data),
+            [1] = SG_RANGE(mip1_data),
+            // ...
+        },
+        // ... more create options
+    });
+    ```
+
+    Using the 'write-unsealed' functions is a bit more effort but
+    much more flexible (especially for initializing image data).
+
+    The general procedure for initializing immutable resources after creation
+    is:
+
+    1. Create the resource in resource state 'unsealed' via the write_unsealed
+       usage flag (note that `desc.usage.write_unsealed = true` implies
+       `desc.usage.immutable = true`).
+
+        For buffers:
+        ```c
+        const sg_buffer buf = sg_make_buffer(&(sg_buffer_desc){
+            .usage.write_unsealed = true,
+            .size = buffer_size,
+        });
+
+        For images:
+        ```c
+        const sg_image img = sg_make_image(&(sg_image_desc){
+            .usage.write_unsealed = true,
+            // ...further image creation options
+        });
+        ```
+
+    2. Populate the unsealed resources with one or multiple write-unsealed
+       calls.
+
+        For buffers:
+        ```c
+        sg_write_buffer_unsealed(&(sg_write_buffer_desc){
+            .src = {
+                .data = {
+                    .ptr = src_data_ptr,
+                    .size = src_data_size,
+                },
+                .offset = ...,  // optional offset into src.data
+            },
+            .dst = {
+                .buffer = buf,
+                .offset = ...,  // optional offset into buffer
+            },
+            .size = ...,  // optional number of bytes to write
+        });
+        ```
+
+        You can usually omit `.src.offset`, `.dst.offset` and `.size`. In
+        that case all data pointed to by `.src.data` will be copied to the
+        start of the buffer, e.g. the simplest possible `sg_write_buffer_unsealed`
+        call looks like this:
+        ```c
+        uint8_t vertex_data[] = { ... };
+        sg_write_buffer_unsealed(&(sg_write_buffer_desc){
+            .src.data = SG_RANGE(vertex_data),
+            .dst.buffer = buf,
+        });
+        ```
+
+        For images the write-unsealed call works per mip-level:
+        ```c
+        sg_write_image_unsealed(&(sg_write_image_desc){
+            .src = {
+                .data = {
+                    .ptr = src_data_ptr,
+                    .size = src_data_size,
+                },
+                .offset = ...,          // optional offset into source data
+                .bytes_per_row = ...,   // optional bytes per row of source data
+                .bytes_per_slice = ..., // optional bytes per slice of source data
+            },
+            .dst = {
+                .image = img,
+                .mip_level = ...,       // the miplevel to write into
+                .x = ...,               // x position of region to write in pixels
+                .y = ...,               // y position of region to write in pixels
+                .slice = ...,           // array/cubemap/3d slice index to write to
+            },
+            .size = {
+                .width = ...,           // width in pixels of region to write in pixels
+                .height = ...,          // height in pixels of region to write in pixels
+                .num_slices = ...,      // number of array/cubemap/3d slices to write
+            },
+        });
+        ```
+
+        Most of the sg_write_image_unsealed options have useful defaults,
+        for instance to initialize the entire first mip level with data that's
+        tightly packed in memory the call looks much simpler:
+        ```c
+        uint8_t mip_data = { ... };
+        sg_write_image_unsealed(&(sg_write_image_desc){
+            .src.data = SG_RANGE(mip_data),
+            .dst.image = img,
+        });
+        ```
+
+    3. After all data has been written to the unsealed resources, 'seal'
+       the resource by calling:
+        ```c
+        sg_seal_buffer(buf);
+        sg_seal_image(img);
+        ```
+
+        This transitions the resource state from 'unsealed' to 'valid' and allows
+        the resource to be bound via the `sg_apply_bindings` call (technically
+        you can bind an unsealed resource, but this will cause the following
+        sg_draw/sg_dispatch calls to be silently ignored).
+
+        Once a resource has been sealed it can no longer be updated with CPU
+        data, e.g. it's not possible to transition a resource back from
+        'valid' to 'unsealed' resource state.
+
+
     ON STORAGE BUFFERS
     ==================
     The two main purpose of storage buffers are:
@@ -2038,7 +2203,7 @@ sg_push_debug_group :: (name: *u8) -> void #foreign sokol_gfx_clib;
 sg_pop_debug_group :: () -> void #foreign sokol_gfx_clib;
 sg_add_commit_listener :: (listener: sg_commit_listener) -> bool #foreign sokol_gfx_clib;
 sg_remove_commit_listener :: (listener: sg_commit_listener) -> bool #foreign sokol_gfx_clib;
-// resource creation, destruction and updating
+// resource creation and destruction
 sg_make_buffer :: (desc: *sg_buffer_desc) -> sg_buffer #foreign sokol_gfx_clib;
 sg_make_image :: (desc: *sg_image_desc) -> sg_image #foreign sokol_gfx_clib;
 sg_make_sampler :: (desc: *sg_sampler_desc) -> sg_sampler #foreign sokol_gfx_clib;
@@ -2051,11 +2216,6 @@ sg_destroy_sampler :: (smp: sg_sampler) -> void #foreign sokol_gfx_clib;
 sg_destroy_shader :: (shd: sg_shader) -> void #foreign sokol_gfx_clib;
 sg_destroy_pipeline :: (pip: sg_pipeline) -> void #foreign sokol_gfx_clib;
 sg_destroy_view :: (view: sg_view) -> void #foreign sokol_gfx_clib;
-sg_update_buffer :: (buf: sg_buffer, data: *sg_range) -> void #foreign sokol_gfx_clib;
-sg_update_image :: (img: sg_image, data: *sg_image_data) -> void #foreign sokol_gfx_clib;
-sg_append_buffer :: (buf: sg_buffer, data: *sg_range) -> s32 #foreign sokol_gfx_clib;
-sg_query_buffer_overflow :: (buf: sg_buffer) -> bool #foreign sokol_gfx_clib;
-sg_query_buffer_will_overflow :: (buf: sg_buffer, size: u64) -> bool #foreign sokol_gfx_clib;
 // render and compute functions
 sg_begin_pass :: (pass: *sg_pass) -> void #foreign sokol_gfx_clib;
 sg_apply_viewport :: (x: s32, y: s32, width: s32, height: s32, origin_top_left: bool) -> void #foreign sokol_gfx_clib;
@@ -2070,6 +2230,17 @@ sg_draw_ex :: (base_element: s32, num_elements: s32, num_instances: s32, base_ve
 sg_dispatch :: (num_groups_x: s32, num_groups_y: s32, num_groups_z: s32) -> void #foreign sokol_gfx_clib;
 sg_end_pass :: () -> void #foreign sokol_gfx_clib;
 sg_commit :: () -> void #foreign sokol_gfx_clib;
+// resource update functions (wip new resource update api)
+sg_write_buffer_unsealed :: (desc: *sg_write_buffer_desc) -> void #foreign sokol_gfx_clib;
+sg_write_image_unsealed :: (desc: *sg_write_image_desc) -> void #foreign sokol_gfx_clib;
+sg_seal_buffer :: (buf: sg_buffer) -> void #foreign sokol_gfx_clib;
+sg_seal_image :: (img: sg_image) -> void #foreign sokol_gfx_clib;
+// update functions (will be deprecated by new resource update functions)
+sg_update_buffer :: (buf: sg_buffer, data: *sg_range) -> void #foreign sokol_gfx_clib;
+sg_update_image :: (img: sg_image, data: *sg_image_data) -> void #foreign sokol_gfx_clib;
+sg_append_buffer :: (buf: sg_buffer, data: *sg_range) -> s32 #foreign sokol_gfx_clib;
+sg_query_buffer_overflow :: (buf: sg_buffer) -> bool #foreign sokol_gfx_clib;
+sg_query_buffer_will_overflow :: (buf: sg_buffer, size: u64) -> bool #foreign sokol_gfx_clib;
 // getting information
 sg_query_desc :: () -> sg_desc #foreign sokol_gfx_clib;
 sg_query_backend :: () -> sg_backend #foreign sokol_gfx_clib;
@@ -2460,8 +2631,10 @@ sg_limits :: struct {
     pool slot is unoccupied and can be allocated. When a resource is
     created, first an id is allocated, and the resource pool slot
     is set to state ALLOC. After allocation, the resource is
-    initialized, which may result in the VALID or FAILED state. The
-    reason why allocation and initialization are separate is because
+    initialized, which may result in the VALID, UNSEALED or FAILED state.
+    UNSEALED is a special state for immutable buffers and images which
+    allows to write data into the resource after the creation call.
+    The reason why allocation and initialization are separate is because
     some resource types (e.g. buffers and images) might be asynchronously
     initialized by the user application. If a resource which is not
     in the VALID state is attempted to be used for rendering, rendering
@@ -2473,6 +2646,7 @@ sg_limits :: struct {
 sg_resource_state :: enum u32 {
     INITIAL;
     ALLOC;
+    UNSEALED;
     VALID;
     FAILED;
     INVALID;
@@ -3104,6 +3278,7 @@ sg_buffer_usage :: struct {
     immutable : bool;
     dynamic_update : bool;
     stream_update : bool;
+    write_unsealed : bool;
 }
 
 sg_buffer_desc :: struct {
@@ -3127,6 +3302,7 @@ sg_image_usage :: struct {
     immutable : bool;
     dynamic_update : bool;
     stream_update : bool;
+    write_unsealed : bool;
 }
 
 /*
@@ -3146,6 +3322,49 @@ sg_view_type :: enum u32 {
 
 sg_image_data :: struct {
     mip_levels : [16]sg_range;
+}
+
+sg_image_extent :: struct {
+    width : s32;
+    height : s32;
+    num_slices : s32;
+}
+
+sg_image_location :: struct {
+    image : sg_image;
+    mip_level : s32;
+    x : s32;
+    y : s32;
+    slice : s32;
+}
+
+sg_write_image_source :: struct {
+    data : sg_range;
+    offset : u64;
+    bytes_per_row : s32;
+    bytes_per_slice : s32;
+}
+
+sg_write_image_desc :: struct {
+    src : sg_write_image_source;
+    dst : sg_image_location;
+    size : sg_image_extent;
+}
+
+sg_buffer_location :: struct {
+    buffer : sg_buffer;
+    offset : u64;
+}
+
+sg_write_buffer_source :: struct {
+    data : sg_range;
+    offset : u64;
+}
+
+sg_write_buffer_desc :: struct {
+    src : sg_write_buffer_source;
+    dst : sg_buffer_location;
+    size : u64;
 }
 
 sg_image_desc :: struct {
@@ -3586,6 +3805,10 @@ sg_trace_hooks :: struct {
     update_buffer : (a0: sg_buffer, a1: *sg_range, a2: *void) #c_call;
     update_image : (a0: sg_image, a1: *sg_image_data, a2: *void) #c_call;
     append_buffer : (a0: sg_buffer, a1: *sg_range, a2: s32, a3: *void) #c_call;
+    write_buffer_unsealed : (a0: *sg_write_buffer_desc, a1: *void) #c_call;
+    write_image_unsealed : (a0: *sg_write_image_desc, a1: *void) #c_call;
+    seal_buffer : (a0: sg_buffer, a1: *void) #c_call;
+    seal_image : (a0: sg_image, a1: *void) #c_call;
     begin_pass : (a0: *sg_pass, a1: *void) #c_call;
     apply_viewport : (a0: s32, a1: s32, a2: s32, a3: s32, a4: bool, a5: *void) #c_call;
     apply_scissor_rect : (a0: s32, a1: s32, a2: s32, a3: s32, a4: bool, a5: *void) #c_call;
@@ -3871,6 +4094,10 @@ sg_frame_stats :: struct {
     num_update_buffer : u32;
     num_append_buffer : u32;
     num_update_image : u32;
+    num_write_buffer_unsealed : u32;
+    num_write_image_unsealed : u32;
+    num_seal_buffer : u32;
+    num_seal_image : u32;
     size_apply_uniforms : u32;
     size_update_buffer : u32;
     size_append_buffer : u32;
@@ -3993,6 +4220,7 @@ sg_log_item :: enum u32 {
     VULKAN_STAGING_ALLOCATE_MEMORY_FAILED;
     VULKAN_STAGING_BIND_BUFFER_MEMORY_FAILED;
     VULKAN_STAGING_STREAM_BUFFER_OVERFLOW;
+    VULKAN_STAGING_IMAGE_ROW_PITCH_GREATER_STAGING_BUFFER;
     VULKAN_CREATE_SHARED_BUFFER_FAILED;
     VULKAN_ALLOCATE_SHARED_BUFFER_MEMORY_FAILED;
     VULKAN_BIND_SHARED_BUFFER_MEMORY_FAILED;
@@ -4056,6 +4284,10 @@ sg_log_item :: enum u32 {
     BEGINPASS_TOO_MANY_RESOLVE_ATTACHMENTS;
     BEGINPASS_ATTACHMENTS_ALIVE;
     DRAW_WITHOUT_BINDINGS;
+    WRITE_BUFFER_UNSEALED_BUFFER_ALIVE;
+    WRITE_IMAGE_UNSEALED_IMAGE_ALIVE;
+    SEAL_BUFFER_ALIVE;
+    SEAL_IMAGE_ALIVE;
     SHADERDESC_TOO_MANY_VERTEXSTAGE_TEXTURES;
     SHADERDESC_TOO_MANY_FRAGMENTSTAGE_TEXTURES;
     SHADERDESC_TOO_MANY_COMPUTESTAGE_TEXTURES;
@@ -4070,6 +4302,7 @@ sg_log_item :: enum u32 {
     SHADERDESC_TOO_MANY_COMPUTESTAGE_TEXTURESAMPLERPAIRS;
     VALIDATE_BUFFERDESC_CANARY;
     VALIDATE_BUFFERDESC_IMMUTABLE_DYNAMIC_STREAM;
+    VALIDATE_BUFFERDESC_UNSEALED_VS_IMMUTABLE;
     VALIDATE_BUFFERDESC_SEPARATE_BUFFER_TYPES;
     VALIDATE_BUFFERDESC_EXPECT_NONZERO_SIZE;
     VALIDATE_BUFFERDESC_EXPECT_MATCHING_DATA_SIZE;
@@ -4082,6 +4315,8 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDATA_DATA_SIZE;
     VALIDATE_IMAGEDESC_CANARY;
     VALIDATE_IMAGEDESC_IMMUTABLE_DYNAMIC_STREAM;
+    VALIDATE_IMAGEDESC_UNSEALED_VS_IMMUTABLE;
+    VALIDATE_IMAGEDESC_UNSEALED_VS_ATTACHMENT;
     VALIDATE_IMAGEDESC_ATTACHMENT_COLOR_DEPTH_STENCIL;
     VALIDATE_IMAGEDESC_IMAGETYPE_2D_NUMSLICES;
     VALIDATE_IMAGEDESC_IMAGETYPE_CUBE_NUMSLICES;
@@ -4102,9 +4337,12 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDESC_ATTACHMENT_MSAA_3D_IMAGE;
     VALIDATE_IMAGEDESC_ATTACHMENT_MSAA_CUBE_IMAGE;
     VALIDATE_IMAGEDESC_ATTACHMENT_MSAA_ARRAY_IMAGE;
+    VALIDATE_IMAGEDESC_STORAGEIMAGE_EXPECT_IMMUTABLE;
+    VALIDATE_IMAGEDESC_STORAGEIMAGE_EXPECT_NO_DATA;
     VALIDATE_IMAGEDESC_STORAGEIMAGE_PIXELFORMAT;
     VALIDATE_IMAGEDESC_STORAGEIMAGE_EXPECT_NO_MSAA;
     VALIDATE_IMAGEDESC_INJECTED_NO_DATA;
+    VALIDATE_IMAGEDESC_UNSEALED_NO_DATA;
     VALIDATE_IMAGEDESC_DYNAMIC_NO_DATA;
     VALIDATE_IMAGEDESC_COMPRESSED_IMMUTABLE;
     VALIDATE_SAMPLERDESC_CANARY;
@@ -4180,7 +4418,8 @@ sg_log_item :: enum u32 {
     VALIDATE_VIEWDESC_UNIQUE_VIEWTYPE;
     VALIDATE_VIEWDESC_ANY_VIEWTYPE;
     VALIDATE_VIEWDESC_RESOURCE_ALIVE;
-    VALIDATE_VIEWDESC_RESOURCE_FAILED;
+    VALIDATE_VIEWDESC_RESOURCE_VALID;
+    VALIDATE_VIEWDESC_IMAGE_VALID_UNSEALED;
     VALIDATE_VIEWDESC_STORAGEBUFFER_OFFSET_VS_BUFFER_SIZE;
     VALIDATE_VIEWDESC_STORAGEBUFFER_OFFSET_MULTIPLE_256;
     VALIDATE_VIEWDESC_STORAGEBUFFER_USAGE;
@@ -4375,6 +4614,32 @@ sg_log_item :: enum u32 {
     VALIDATE_APPENDBUF_UPDATE;
     VALIDATE_UPDIMG_USAGE;
     VALIDATE_UPDIMG_ONCE;
+    VALIDATE_WRITEBUFFERUNSEALED_USAGE;
+    VALIDATE_WRITEBUFFERUNSEALED_RESOURCESTATE;
+    VALIDATE_WRITEBUFFERUNSEALED_SRC_DATA_POINTER;
+    VALIDATE_WRITEBUFFERUNSEALED_SRC_DATA_SIZE;
+    VALIDATE_WRITEBUFFERUNSEALED_SIZE;
+    VALIDATE_WRITEBUFFERUNSEALED_WRITE_OVERFLOW;
+    VALIDATE_WRITEBUFFERUNSEALED_READ_OVERFLOW;
+    VALIDATE_WRITEIMAGEUNSEALED_USAGE;
+    VALIDATE_WRITEIMAGEUNSEALED_RESOURCESTATE;
+    VALIDATE_WRITEIMAGEUNSEALED_SRC_DATA_POINTER;
+    VALIDATE_WRITEIMAGEUNSEALED_SRC_DATA_SIZE;
+    VALIDATE_WRITEIMAGEUNSEALED_BYTESPERROW;
+    VALIDATE_WRITEIMAGEUNSEALED_BYTESPERSLICE;
+    VALIDATE_WRITEIMAGEUNSEALED_MIPLEVEL;
+    VALIDATE_WRITEIMAGEUNSEALED_WIDTH;
+    VALIDATE_WRITEIMAGEUNSEALED_HEIGHT;
+    VALIDATE_WRITEIMAGEUNSEALED_NUMSLICES;
+    VALIDATE_WRITEIMAGEUNSEALED_READ_OVERFLOW;
+    VALIDATE_WRITEIMAGEUNSEALED_DST_X_RANGE;
+    VALIDATE_WRITEIMAGEUNSEALED_DST_Y_RANGE;
+    VALIDATE_WRITEIMAGEUNSEALED_DST_SLICE_RANGE;
+    VALIDATE_WRITEIMAGEUNSEALED_WRITE_WIDTH_OVERFLOW;
+    VALIDATE_WRITEIMAGEUNSEALED_WRITE_HEIGHT_OVERFLOW;
+    VALIDATE_WRITEIMAGEUNSEALED_WRITE_NUMSLICES_OVERFLOW;
+    VALIDATE_SEALBUFFER_RESOURCESTATE;
+    VALIDATE_SEALIMAGE_RESOURCESTATE;
     VALIDATION_FAILED;
 }
 
