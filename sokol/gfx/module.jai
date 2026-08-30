@@ -304,13 +304,37 @@
         resource from unsealed into valid state. For more details see the
         doc section `ON POPULATING IMMUTABLE RESOURCES` below.
 
-    --- to update (overwrite) the content of buffer and image resources, call:
+    --- to update the content of buffer and image resources:
+
+        For data that's written by the CPU and consumed by the GPU in the
+        *same frame* and doesn't need to survive into the next frame, call:
+
+            sg_write_buffer_transient(const sg_write_buffer_desc* desc);
+            sg_write_image_transient(const sg_write_image_desc* desc);
+
+        The buffer and image objects which are the destination of
+        write-transient calls must have been created with
+        `.usage.write_transient = true` and cannot be pass attachments.
+
+        Multiple calls to the write-transient functions are allowed in a frame
+        to incrementally populate the resource, but only until the resource is bound.
+        After a resource has been used in a frame it cannot be written to until
+        the next frame.
+
+        Expect that data written with the write-transient functions will not
+        survive into the next frame, e.g. all data written by the CPU is expected
+        to be 'consumed' by the GPU in the same frame. Trying to bind a write-transient
+        buffer or image that hasn't been written to in the same frame is a validation
+        layer error. Calling a write-transient function on a resource that isn't
+        used for rendering in the same frame is allowed but pointless.
+
+        For data that needs to persist across frames, call:
 
             sg_update_buffer(sg_buffer buf, const sg_range* data)
             sg_update_image(sg_image img, const sg_image_data* data)
 
         Buffers and images to be updated must have been created with
-        sg_buffer_desc.usage.dynamic_update or .stream_update.
+        sg_buffer_desc.usage.dynamic_update.
 
         Only one update per frame is allowed for buffer and image resources when
         using the sg_update_*() functions. The rationale is to have a simple
@@ -321,60 +345,8 @@
         operation only references the valid (updated) data in the
         buffer or image.
 
-    --- to append a chunk of data to a buffer resource, call:
-
-            int sg_append_buffer(sg_buffer buf, const sg_range* data)
-
-        The difference to sg_update_buffer() is that sg_append_buffer()
-        can be called multiple times per frame to append new data to the
-        buffer piece by piece, optionally interleaved with draw calls referencing
-        the previously written data.
-
-        sg_append_buffer() returns a byte offset to the start of the
-        written data, this offset can be assigned to
-        sg_bindings.vertex_buffer_offsets[n] or
-        sg_bindings.index_buffer_offset
-
-        Code example:
-
-        for (...) {
-            const void* data = ...;
-            const int num_bytes = ...;
-            int offset = sg_append_buffer(buf, &(sg_range) { .ptr=data, .size=num_bytes });
-            bindings.vertex_buffer_offsets[0] = offset;
-            sg_apply_pipeline(pip);
-            sg_apply_bindings(&bindings);
-            sg_apply_uniforms(...);
-            sg_draw(...);
-        }
-
-        A buffer to be used with sg_append_buffer() must have been created
-        with sg_buffer_desc.usage.dynamic_update or .stream_update.
-
-        If the application appends more data to the buffer then fits into
-        the buffer, the buffer will go into the "overflow" state for the
-        rest of the frame.
-
-        Any draw calls attempting to render an overflown buffer will be
-        silently dropped (in debug mode this will also result in a
-        validation error).
-
-        You can also check manually if a buffer is in overflow-state by calling
-
-            bool sg_query_buffer_overflow(sg_buffer buf)
-
-        You can manually check to see if an overflow would occur before adding
-        any data to a buffer by calling
-
-            bool sg_query_buffer_will_overflow(sg_buffer buf, size_t size)
-
-        NOTE: Due to restrictions in underlying 3D-APIs, appended chunks of
-        data will be 4-byte aligned in the destination buffer. This means
-        that there will be gaps in index buffers containing 16-bit indices
-        when the number of indices in a call to sg_append_buffer() is
-        odd. This isn't a problem when each call to sg_append_buffer()
-        is associated with one draw call, but will be problematic when
-        a single indexed draw call spans several appended chunks of indices.
+        NOTE: the update functions will be replaced with more flexible
+        'write-persistent' functions in the next resource API update!
 
     --- to check at runtime for optional features, limits and pixelformat support,
         call:
@@ -461,7 +433,7 @@
     --- call the following helper functions to compute the number of
         bytes in a texture row or surface for a specific pixel format.
         These functions might be helpful when preparing image data for consumption
-        by sg_make_image() or sg_update_image():
+        by sg_make_image() or the sg_write_image_*() functions:
 
             int sg_query_row_pitch(sg_pixel_format fmt, int width, int int row_align_bytes);
             int sg_query_surface_pitch(sg_pixel_format fmt, int width, int height, int row_align_bytes);
@@ -2231,6 +2203,8 @@ sg_dispatch :: (num_groups_x: s32, num_groups_y: s32, num_groups_z: s32) -> void
 sg_end_pass :: () -> void #foreign sokol_gfx_clib;
 sg_commit :: () -> void #foreign sokol_gfx_clib;
 // resource update functions (wip new resource update api)
+sg_write_buffer_transient :: (desc: *sg_write_buffer_desc) -> void #foreign sokol_gfx_clib;
+sg_write_image_transient :: (desc: *sg_write_image_desc) -> void #foreign sokol_gfx_clib;
 sg_write_buffer_unsealed :: (desc: *sg_write_buffer_desc) -> void #foreign sokol_gfx_clib;
 sg_write_image_unsealed :: (desc: *sg_write_image_desc) -> void #foreign sokol_gfx_clib;
 sg_seal_buffer :: (buf: sg_buffer) -> void #foreign sokol_gfx_clib;
@@ -2499,7 +2473,7 @@ sg_backend :: enum u32 {
 
     The default pixel format for texture images is SG_PIXELFORMAT_RGBA8.
 
-    The default pixel format for render target images is platform-dependent
+    The default pixel format for pass attachment images is platform-dependent
     and taken from the sg_environment struct passed into sg_setup(). Typically
     the default formats are:
 
@@ -3276,9 +3250,9 @@ sg_buffer_usage :: struct {
     index_buffer : bool;
     storage_buffer : bool;
     immutable : bool;
-    dynamic_update : bool;
-    stream_update : bool;
     write_unsealed : bool;
+    write_transient : bool;
+    dynamic_update : bool;
 }
 
 sg_buffer_desc :: struct {
@@ -3300,9 +3274,9 @@ sg_image_usage :: struct {
     resolve_attachment : bool;
     depth_stencil_attachment : bool;
     immutable : bool;
-    dynamic_update : bool;
-    stream_update : bool;
     write_unsealed : bool;
+    write_transient : bool;
+    dynamic_update : bool;
 }
 
 /*
@@ -3805,6 +3779,8 @@ sg_trace_hooks :: struct {
     update_buffer : (a0: sg_buffer, a1: *sg_range, a2: *void) #c_call;
     update_image : (a0: sg_image, a1: *sg_image_data, a2: *void) #c_call;
     append_buffer : (a0: sg_buffer, a1: *sg_range, a2: s32, a3: *void) #c_call;
+    write_buffer_transient : (a0: *sg_write_buffer_desc, a1: *void) #c_call;
+    write_image_transient : (a0: *sg_write_image_desc, a1: *void) #c_call;
     write_buffer_unsealed : (a0: *sg_write_buffer_desc, a1: *void) #c_call;
     write_image_unsealed : (a0: *sg_write_image_desc, a1: *void) #c_call;
     seal_buffer : (a0: sg_buffer, a1: *void) #c_call;
@@ -3862,19 +3838,19 @@ sg_slot_info :: struct {
 
 sg_buffer_info :: struct {
     slot : sg_slot_info;
+    num_slots : s32;
+    active_slot : s32;
     update_frame_index : u32;
     append_frame_index : u32;
     append_pos : s32;
     append_overflow : bool;
-    num_slots : s32;
-    active_slot : s32;
 }
 
 sg_image_info :: struct {
     slot : sg_slot_info;
-    upd_frame_index : u32;
     num_slots : s32;
     active_slot : s32;
+    upd_frame_index : u32;
 }
 
 sg_sampler_info :: struct {
@@ -4094,6 +4070,8 @@ sg_frame_stats :: struct {
     num_update_buffer : u32;
     num_append_buffer : u32;
     num_update_image : u32;
+    num_write_buffer_transient : u32;
+    num_write_image_transient : u32;
     num_write_buffer_unsealed : u32;
     num_write_image_unsealed : u32;
     num_seal_buffer : u32;
@@ -4174,6 +4152,7 @@ sg_log_item :: enum u32 {
     D3D11_MAP_FOR_UPDATE_BUFFER_FAILED;
     D3D11_MAP_FOR_APPEND_BUFFER_FAILED;
     D3D11_MAP_FOR_UPDATE_IMAGE_FAILED;
+    D3D11_MAP_FOR_WRITE_BUFFER_TRANSIENT_FAILED;
     METAL_CREATE_BUFFER_FAILED;
     METAL_TEXTURE_FORMAT_NOT_SUPPORTED;
     METAL_CREATE_TEXTURE_FAILED;
@@ -4219,7 +4198,7 @@ sg_log_item :: enum u32 {
     VULKAN_STAGING_CREATE_BUFFER_FAILED;
     VULKAN_STAGING_ALLOCATE_MEMORY_FAILED;
     VULKAN_STAGING_BIND_BUFFER_MEMORY_FAILED;
-    VULKAN_STAGING_STREAM_BUFFER_OVERFLOW;
+    VULKAN_STAGING_TRANSIENT_BUFFER_OVERFLOW;
     VULKAN_STAGING_IMAGE_ROW_PITCH_GREATER_STAGING_BUFFER;
     VULKAN_CREATE_SHARED_BUFFER_FAILED;
     VULKAN_ALLOCATE_SHARED_BUFFER_MEMORY_FAILED;
@@ -4284,6 +4263,8 @@ sg_log_item :: enum u32 {
     BEGINPASS_TOO_MANY_RESOLVE_ATTACHMENTS;
     BEGINPASS_ATTACHMENTS_ALIVE;
     DRAW_WITHOUT_BINDINGS;
+    WRITE_BUFFER_TRANSIENT_BUFFER_ALIVE;
+    WRITE_IMAGE_TRANSIENT_IMAGE_ALIVE;
     WRITE_BUFFER_UNSEALED_BUFFER_ALIVE;
     WRITE_IMAGE_UNSEALED_IMAGE_ALIVE;
     SEAL_BUFFER_ALIVE;
@@ -4301,7 +4282,7 @@ sg_log_item :: enum u32 {
     SHADERDESC_TOO_MANY_FRAGMENTSTAGE_TEXTURESAMPLERPAIRS;
     SHADERDESC_TOO_MANY_COMPUTESTAGE_TEXTURESAMPLERPAIRS;
     VALIDATE_BUFFERDESC_CANARY;
-    VALIDATE_BUFFERDESC_IMMUTABLE_DYNAMIC_STREAM;
+    VALIDATE_BUFFERDESC_IMMUTABLE_VS_WRITABLE;
     VALIDATE_BUFFERDESC_UNSEALED_VS_IMMUTABLE;
     VALIDATE_BUFFERDESC_SEPARATE_BUFFER_TYPES;
     VALIDATE_BUFFERDESC_EXPECT_NONZERO_SIZE;
@@ -4314,9 +4295,11 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDATA_NODATA;
     VALIDATE_IMAGEDATA_DATA_SIZE;
     VALIDATE_IMAGEDESC_CANARY;
-    VALIDATE_IMAGEDESC_IMMUTABLE_DYNAMIC_STREAM;
-    VALIDATE_IMAGEDESC_UNSEALED_VS_IMMUTABLE;
-    VALIDATE_IMAGEDESC_UNSEALED_VS_ATTACHMENT;
+    VALIDATE_IMAGEDESC_IMMUTABLE_VS_WRITABLE;
+    VALIDATE_IMAGEDESC_WRITE_UNSEALED_VS_IMMUTABLE;
+    VALIDATE_IMAGEDESC_WRITE_UNSEALED_VS_ATTACHMENT;
+    VALIDATE_IMAGEDESC_WRITE_TRANSIENT_VS_ATTACHMENT;
+    VALIDATE_IMAGEDESC_DYNAMIC_UPDATE_VS_ATTACHMENT;
     VALIDATE_IMAGEDESC_ATTACHMENT_COLOR_DEPTH_STENCIL;
     VALIDATE_IMAGEDESC_IMAGETYPE_2D_NUMSLICES;
     VALIDATE_IMAGEDESC_IMAGETYPE_CUBE_NUMSLICES;
@@ -4342,8 +4325,7 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDESC_STORAGEIMAGE_PIXELFORMAT;
     VALIDATE_IMAGEDESC_STORAGEIMAGE_EXPECT_NO_MSAA;
     VALIDATE_IMAGEDESC_INJECTED_NO_DATA;
-    VALIDATE_IMAGEDESC_UNSEALED_NO_DATA;
-    VALIDATE_IMAGEDESC_DYNAMIC_NO_DATA;
+    VALIDATE_IMAGEDESC_WRITABLE_NO_DATA;
     VALIDATE_IMAGEDESC_COMPRESSED_IMMUTABLE;
     VALIDATE_SAMPLERDESC_CANARY;
     VALIDATE_SAMPLERDESC_ANISTROPIC_REQUIRES_LINEAR_FILTERING;
@@ -4549,11 +4531,13 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_VBUF_ALIVE;
     VALIDATE_ABND_VBUF_USAGE;
     VALIDATE_ABND_VBUF_OVERFLOW;
+    VALIDATE_ABND_VBUF_WRITE_TRANSIENT;
     VALIDATE_ABND_EXPECTED_NO_IBUF;
     VALIDATE_ABND_EXPECTED_IBUF;
     VALIDATE_ABND_IBUF_ALIVE;
     VALIDATE_ABND_IBUF_USAGE;
     VALIDATE_ABND_IBUF_OVERFLOW;
+    VALIDATE_ABND_IBUF_WRITE_TRANSIENT;
     VALIDATE_ABND_EXPECTED_VIEW_BINDING;
     VALIDATE_ABND_VIEW_ALIVE;
     VALIDATE_ABND_EXPECT_TEXVIEW;
@@ -4564,10 +4548,13 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_TEXVIEW_EXPECTED_NON_MULTISAMPLED_IMAGE;
     VALIDATE_ABND_TEXVIEW_EXPECTED_FILTERABLE_IMAGE;
     VALIDATE_ABND_TEXVIEW_EXPECTED_DEPTH_IMAGE;
+    VALIDATE_ABND_TEXVIEW_IMAGE_WRITE_TRANSIENT;
     VALIDATE_ABND_SBVIEW_READWRITE_IMMUTABLE;
+    VALIDATE_ABND_SBVIEW_BUFFER_WRITE_TRANSIENT;
     VALIDATE_ABND_SIMGVIEW_COMPUTE_PASS_EXPECTED;
     VALIDATE_ABND_SIMGVIEW_IMAGETYPE_MISMATCH;
     VALIDATE_ABND_SIMGVIEW_ACCESSFORMAT;
+    VALIDATE_ABND_SIMGVIEW_IMAGE_WRITE_TRANSIENT;
     VALIDATE_ABND_EXPECTED_SAMPLER_BINDING;
     VALIDATE_ABND_UNEXPECTED_SAMPLER_COMPARE_NEVER;
     VALIDATE_ABND_EXPECTED_SAMPLER_COMPARE_NEVER;
@@ -4616,28 +4603,33 @@ sg_log_item :: enum u32 {
     VALIDATE_UPDIMG_ONCE;
     VALIDATE_WRITEBUFFERUNSEALED_USAGE;
     VALIDATE_WRITEBUFFERUNSEALED_RESOURCESTATE;
-    VALIDATE_WRITEBUFFERUNSEALED_SRC_DATA_POINTER;
-    VALIDATE_WRITEBUFFERUNSEALED_SRC_DATA_SIZE;
-    VALIDATE_WRITEBUFFERUNSEALED_SIZE;
-    VALIDATE_WRITEBUFFERUNSEALED_WRITE_OVERFLOW;
-    VALIDATE_WRITEBUFFERUNSEALED_READ_OVERFLOW;
+    VALIDATE_WRITEBUFFERTRANSIENT_USAGE;
+    VALIDATE_WRITEBUFFERTRANSIENT_WRITE_BEFORE_BIND;
+    VALIDATE_WRITEBUFFERTRANSIENT_DST_OFFSET_ALIGNMENT;
+    VALIDATE_WRITEBUFFER_SRC_DATA_POINTER;
+    VALIDATE_WRITEBUFFER_SRC_DATA_SIZE;
+    VALIDATE_WRITEBUFFER_SIZE;
+    VALIDATE_WRITEBUFFER_WRITE_OVERFLOW;
+    VALIDATE_WRITEBUFFER_READ_OVERFLOW;
     VALIDATE_WRITEIMAGEUNSEALED_USAGE;
     VALIDATE_WRITEIMAGEUNSEALED_RESOURCESTATE;
-    VALIDATE_WRITEIMAGEUNSEALED_SRC_DATA_POINTER;
-    VALIDATE_WRITEIMAGEUNSEALED_SRC_DATA_SIZE;
-    VALIDATE_WRITEIMAGEUNSEALED_BYTESPERROW;
-    VALIDATE_WRITEIMAGEUNSEALED_BYTESPERSLICE;
-    VALIDATE_WRITEIMAGEUNSEALED_MIPLEVEL;
-    VALIDATE_WRITEIMAGEUNSEALED_WIDTH;
-    VALIDATE_WRITEIMAGEUNSEALED_HEIGHT;
-    VALIDATE_WRITEIMAGEUNSEALED_NUMSLICES;
-    VALIDATE_WRITEIMAGEUNSEALED_READ_OVERFLOW;
-    VALIDATE_WRITEIMAGEUNSEALED_DST_X_RANGE;
-    VALIDATE_WRITEIMAGEUNSEALED_DST_Y_RANGE;
-    VALIDATE_WRITEIMAGEUNSEALED_DST_SLICE_RANGE;
-    VALIDATE_WRITEIMAGEUNSEALED_WRITE_WIDTH_OVERFLOW;
-    VALIDATE_WRITEIMAGEUNSEALED_WRITE_HEIGHT_OVERFLOW;
-    VALIDATE_WRITEIMAGEUNSEALED_WRITE_NUMSLICES_OVERFLOW;
+    VALIDATE_WRITEIMAGETRANSIENT_USAGE;
+    VALIDATE_WRITEIMAGETRANSIENT_WRITE_BEFORE_BIND;
+    VALIDATE_WRITEIMAGE_SRC_DATA_POINTER;
+    VALIDATE_WRITEIMAGE_SRC_DATA_SIZE;
+    VALIDATE_WRITEIMAGE_BYTESPERROW;
+    VALIDATE_WRITEIMAGE_BYTESPERSLICE;
+    VALIDATE_WRITEIMAGE_MIPLEVEL;
+    VALIDATE_WRITEIMAGE_WIDTH;
+    VALIDATE_WRITEIMAGE_HEIGHT;
+    VALIDATE_WRITEIMAGE_NUMSLICES;
+    VALIDATE_WRITEIMAGE_READ_OVERFLOW;
+    VALIDATE_WRITEIMAGE_DST_X_RANGE;
+    VALIDATE_WRITEIMAGE_DST_Y_RANGE;
+    VALIDATE_WRITEIMAGE_DST_SLICE_RANGE;
+    VALIDATE_WRITEIMAGE_WRITE_WIDTH_OVERFLOW;
+    VALIDATE_WRITEIMAGE_WRITE_HEIGHT_OVERFLOW;
+    VALIDATE_WRITEIMAGE_WRITE_NUMSLICES_OVERFLOW;
     VALIDATE_SEALBUFFER_RESOURCESTATE;
     VALIDATE_SEALIMAGE_RESOURCESTATE;
     VALIDATION_FAILED;
@@ -4710,7 +4702,7 @@ sg_wgpu_desc :: struct {
 
 sg_vulkan_desc :: struct {
     copy_staging_buffer_size : s32;
-    stream_staging_buffer_size : s32;
+    transient_staging_buffer_size : s32;
     descriptor_buffer_size : s32;
 }
 
