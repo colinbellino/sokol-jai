@@ -58,6 +58,7 @@ build_lib_arm64_release sokol_fontstash   fontstash/sokol_fontstash_macos_arm64_
 build_lib_arm64_release sokol_framebuffer framebuffer/sokol_framebuffer_macos_arm64_metal_release SOKOL_METAL
 build_lib_arm64_release sokol_letterbox   letterbox/sokol_letterbox_macos_arm64_metal_release SOKOL_METAL
 build_lib_arm64_release sokol_cmdbuf      cmdbuf/sokol_cmdbuf_macos_arm64_metal_release SOKOL_METAL
+build_lib_arm64_release sokol_fetch       fetch/sokol_fetch_macos_arm64_metal_release SOKOL_METAL
 
 # ARM + Metal + Debug
 build_lib_arm64_debug sokol_log           log/sokol_log_macos_arm64_metal_debug SOKOL_METAL
@@ -73,6 +74,7 @@ build_lib_arm64_debug sokol_fontstash     fontstash/sokol_fontstash_macos_arm64_
 build_lib_arm64_debug sokol_framebuffer   framebuffer/sokol_framebuffer_macos_arm64_metal_debug SOKOL_METAL
 build_lib_arm64_debug sokol_letterbox     letterbox/sokol_letterbox_macos_arm64_metal_debug SOKOL_METAL
 build_lib_arm64_debug sokol_cmdbuf        cmdbuf/sokol_cmdbuf_macos_arm64_metal_debug SOKOL_METAL
+build_lib_arm64_debug sokol_fetch         fetch/sokol_fetch_macos_arm64_metal_debug SOKOL_METAL
 
 # x64 + Metal + Release
 build_lib_x64_release sokol_log         log/sokol_log_macos_x64_metal_release SOKOL_METAL
@@ -88,6 +90,7 @@ build_lib_x64_release sokol_fontstash   fontstash/sokol_fontstash_macos_x64_meta
 build_lib_x64_release sokol_framebuffer framebuffer/sokol_framebuffer_macos_x64_metal_release SOKOL_METAL
 build_lib_x64_release sokol_letterbox   letterbox/sokol_letterbox_macos_x64_metal_release SOKOL_METAL
 build_lib_x64_release sokol_cmdbuf      cmdbuf/sokol_cmdbuf_macos_x64_metal_release SOKOL_METAL
+build_lib_x64_release sokol_fetch       fetch/sokol_fetch_macos_x64_metal_release SOKOL_METAL
 
 # x64 + Metal + Debug
 build_lib_x64_debug sokol_log           log/sokol_log_macos_x64_metal_debug SOKOL_METAL
@@ -103,6 +106,7 @@ build_lib_x64_debug sokol_fontstash     fontstash/sokol_fontstash_macos_x64_meta
 build_lib_x64_debug sokol_framebuffer   framebuffer/sokol_framebuffer_macos_x64_metal_debug SOKOL_METAL
 build_lib_x64_debug sokol_letterbox     letterbox/sokol_letterbox_macos_x64_metal_debug SOKOL_METAL
 build_lib_x64_debug sokol_cmdbuf        cmdbuf/sokol_cmdbuf_macos_x64_metal_debug SOKOL_METAL
+build_lib_x64_debug sokol_fetch         fetch/sokol_fetch_macos_x64_metal_debug SOKOL_METAL
 
 # ARM + GL + Release
 build_lib_arm64_release sokol_log         log/sokol_log_macos_arm64_gl_release SOKOL_GLCORE
@@ -118,6 +122,7 @@ build_lib_arm64_release sokol_fontstash   fontstash/sokol_fontstash_macos_arm64_
 build_lib_arm64_release sokol_framebuffer framebuffer/sokol_framebuffer_macos_arm64_gl_release SOKOL_GLCORE
 build_lib_arm64_release sokol_letterbox   letterbox/sokol_letterbox_macos_arm64_gl_release SOKOL_GLCORE
 build_lib_arm64_release sokol_cmdbuf      cmdbuf/sokol_cmdbuf_macos_arm64_gl_release SOKOL_GLCORE
+build_lib_arm64_release sokol_fetch       fetch/sokol_fetch_macos_arm64_gl_release SOKOL_GLCORE
 
 # ARM + GL + Debug
 build_lib_arm64_debug sokol_log           log/sokol_log_macos_arm64_gl_debug SOKOL_GLCORE
@@ -133,6 +138,7 @@ build_lib_arm64_debug sokol_fontstash     fontstash/sokol_fontstash_macos_arm64_
 build_lib_arm64_debug sokol_framebuffer   framebuffer/sokol_framebuffer_macos_arm64_gl_debug SOKOL_GLCORE
 build_lib_arm64_debug sokol_letterbox     letterbox/sokol_letterbox_macos_arm64_gl_debug SOKOL_GLCORE
 build_lib_arm64_debug sokol_cmdbuf        cmdbuf/sokol_cmdbuf_macos_arm64_gl_debug SOKOL_GLCORE
+build_lib_arm64_debug sokol_fetch         fetch/sokol_fetch_macos_arm64_gl_debug SOKOL_GLCORE
 
 # x64 + GL + Release
 build_lib_x64_release sokol_log         log/sokol_log_macos_x64_gl_release SOKOL_GLCORE
@@ -148,6 +154,7 @@ build_lib_x64_release sokol_fontstash   fontstash/sokol_fontstash_macos_x64_gl_r
 build_lib_x64_release sokol_framebuffer framebuffer/sokol_framebuffer_macos_x64_gl_release SOKOL_GLCORE
 build_lib_x64_release sokol_letterbox   letterbox/sokol_letterbox_macos_x64_gl_release SOKOL_GLCORE
 build_lib_x64_release sokol_cmdbuf      cmdbuf/sokol_cmdbuf_macos_x64_gl_release SOKOL_GLCORE
+build_lib_x64_release sokol_fetch       fetch/sokol_fetch_macos_x64_gl_release SOKOL_GLCORE
 
 # x64 + GL + Debug
 build_lib_x64_debug sokol_log           log/sokol_log_macos_x64_gl_debug SOKOL_GLCORE
@@ -163,5 +170,6 @@ build_lib_x64_debug sokol_fontstash     fontstash/sokol_fontstash_macos_x64_gl_d
 build_lib_x64_debug sokol_framebuffer   framebuffer/sokol_framebuffer_macos_x64_gl_debug SOKOL_GLCORE
 build_lib_x64_debug sokol_letterbox     letterbox/sokol_letterbox_macos_x64_gl_debug SOKOL_GLCORE
 build_lib_x64_debug sokol_cmdbuf        cmdbuf/sokol_cmdbuf_macos_x64_gl_debug SOKOL_GLCORE
+build_lib_x64_debug sokol_fetch         fetch/sokol_fetch_macos_x64_gl_debug SOKOL_GLCORE
 
 rm *.o

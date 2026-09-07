@@ -31,6 +31,7 @@ build_lib_wasm_release sokol_gl          gl/sokol_gl_wasm_gl_release SOKOL_GLES3
 build_lib_wasm_release sokol_framebuffer framebuffer/sokol_framebuffer_wasm_gl_release SOKOL_GLES3
 build_lib_wasm_release sokol_letterbox   letterbox/sokol_letterbox_wasm_gl_release SOKOL_GLES3
 build_lib_wasm_release sokol_cmdbuf      cmdbuf/sokol_cmdbuf_wasm_gl_release SOKOL_GLES3
+build_lib_wasm_release sokol_fetch       fetch/sokol_fetch_wasm_gl_release SOKOL_GLES3
 
 # wasm + GL + Debug
 build_lib_wasm_debug sokol_log           log/sokol_log_wasm_gl_debug SOKOL_GLES3
@@ -45,5 +46,6 @@ build_lib_wasm_debug sokol_gl            gl/sokol_gl_wasm_gl_debug SOKOL_GLES3
 build_lib_wasm_debug sokol_framebuffer   framebuffer/sokol_framebuffer_wasm_gl_debug SOKOL_GLES3
 build_lib_wasm_debug sokol_letterbox     letterbox/sokol_letterbox_wasm_gl_debug SOKOL_GLES3
 build_lib_wasm_debug sokol_cmdbuf        cmdbuf/sokol_cmdbuf_wasm_gl_debug SOKOL_GLES3
+build_lib_wasm_debug sokol_fetch         fetch/sokol_fetch_wasm_gl_debug SOKOL_GLES3
 
 rm *.o
