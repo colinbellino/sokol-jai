@@ -98,7 +98,11 @@ To use them:
     ```
 
     Repeat per (arch × config × backend) combination you target — mirroring
-    the naming used by the other `sokol/<module>/*.a` archives.
+    the naming used by the other `sokol/<module>/*.a` archives. The backend
+    define (`-DSOKOL_METAL` above, or `-DSOKOL_D3D11`/`-DSOKOL_GLCORE`/
+    `-DSOKOL_GLES3`) must match the one used when the corresponding
+    `sokol_gfx_*_*.a` archive was built — otherwise the imgui renderer
+    picks a different backend than sokol-gfx.
 
 3. Import the module and use it normally:
 
