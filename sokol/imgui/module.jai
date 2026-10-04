@@ -194,13 +194,19 @@
             .dpi_scale = sapp_dpi_scale()
         });
 
-    --- at the end of the frame, before the sg_end_pass() where you
-        want to render the UI, call:
+    --- after issuing Dear ImGui UI calls and outside the sokol-gfx
+        pass which renders the UI (the later in the frame the better):
 
-        simgui_render()
+        simgui_flush();
 
-        This will first call ImGui::Render(), and then render ImGui's draw list
-        through sokol_gfx.h
+        this may create and update font textures and 'renders'
+        the Dear ImGui UI into command lists.
+
+    --- ...and finally inside a sokol-gfx render pass, call:
+
+        simgui_draw();
+
+        To actually render the UI.
 
     --- if you're using sokol_app.h, from inside the sokol_app.h event callback,
         call:
@@ -457,7 +463,8 @@ else #if OS == .MACOS {
 
 simgui_setup :: (desc: *simgui_desc_t) -> void #foreign sokol_imgui_clib;
 simgui_new_frame :: (desc: *simgui_frame_desc_t) -> void #foreign sokol_imgui_clib;
-simgui_render :: () -> void #foreign sokol_imgui_clib;
+simgui_flush :: () -> void #foreign sokol_imgui_clib;
+simgui_draw :: () -> void #foreign sokol_imgui_clib;
 simgui_imtextureid :: (tex_view: sg_view) -> u64 #foreign sokol_imgui_clib;
 simgui_imtextureid_with_sampler :: (tex_view: sg_view, smp: sg_sampler) -> u64 #foreign sokol_imgui_clib;
 simgui_texture_view_from_imtextureid :: (imtex_id: u64) -> sg_view #foreign sokol_imgui_clib;
@@ -478,6 +485,10 @@ simgui_shutdown :: () -> void #foreign sokol_imgui_clib;
 simgui_log_item_t :: enum u32 {
     OK;
     BUFFER_OVERFLOW;
+    NEW_FRAME_NOT_CALLED_BEFORE_FLUSH;
+    FLUSH_CALLED_IN_SOKOLGFX_PASS;
+    FLUSH_NOT_CALLED_BEFORE_DRAW;
+    DRAW_CALLED_OUTSIDE_SOKOLGFX_RENDER_PASS;
 }
 
 simgui_logger_t :: struct {

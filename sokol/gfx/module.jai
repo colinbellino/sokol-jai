@@ -304,10 +304,9 @@
         resource from unsealed into valid state. For more details see the
         doc section `ON POPULATING IMMUTABLE RESOURCES` below.
 
-    --- to update the content of buffer and image resources:
-
-        For data that's written by the CPU and consumed by the GPU in the
-        *same frame* and doesn't need to survive into the next frame, call:
+    --- to write 'transient' data from the CPU side that's 'consumed'
+        in the same frame by the GPU side (e.g. the data doesn't need
+        to survive into the next frame):
 
             sg_write_buffer_transient(const sg_write_buffer_desc* desc);
             sg_write_image_transient(const sg_write_image_desc* desc);
@@ -317,7 +316,8 @@
         `.usage.write_transient = true` and cannot be pass attachments.
 
         Multiple calls to the write-transient functions are allowed in a frame
-        to incrementally populate the resource, but only until the resource is bound.
+        to incrementally populate the resource, but only until the resource is bound
+        or used as a copy source.
         After a resource has been used in a frame it cannot be written to until
         the next frame.
 
@@ -328,25 +328,24 @@
         layer error. Calling a write-transient function on a resource that isn't
         used for rendering in the same frame is allowed but pointless.
 
-        For data that needs to persist across frames, call:
+    --- to copy data between resources, call one of the `sg_copy_*` funcs:
 
-            sg_update_buffer(sg_buffer buf, const sg_range* data)
-            sg_update_image(sg_image img, const sg_image_data* data)
+            sg_copy_buffer_to_buffer(const sg_copy_buffer_to_buffer_desc* desc);
+            sg_copy_buffer_to_image(const sg_copy_buffer_to_image_desc* desc);
 
-        Buffers and images to be updated must have been created with
-        sg_buffer_desc.usage.dynamic_update.
+        The source resource must have been created with usage .copy_src and
+        the destination resource must have been created with usage .copy_dst.
 
-        Only one update per frame is allowed for buffer and image resources when
-        using the sg_update_*() functions. The rationale is to have a simple
-        protection from the CPU scribbling over data the GPU is currently
-        using, or the CPU having to wait for the GPU
+        There are a few backend-specific caveats, for more information see
+        the section ON COPYING DATA BETWEEN RESOURCES.
 
-        Buffer and image updates can be partial, as long as a rendering
-        operation only references the valid (updated) data in the
-        buffer or image.
+    --- to write CPU-side data persistently into buffer and image resources,
+        use a combination of sg_write_buffer_transient() into a 'staging buffer',
+        followed by an sg_copy_* call to perform a copy from the staging
+        buffer into the destination resource.
 
-        NOTE: the update functions will be replaced with more flexible
-        'write-persistent' functions in the next resource API update!
+        For more information on uploading data persistently into resources see
+        the section ON UPLOADING PERSISTENT DATA INTO RESOURCES.
 
     --- to check at runtime for optional features, limits and pixelformat support,
         call:
@@ -435,7 +434,7 @@
         These functions might be helpful when preparing image data for consumption
         by sg_make_image() or the sg_write_image_*() functions:
 
-            int sg_query_row_pitch(sg_pixel_format fmt, int width, int int row_align_bytes);
+            int sg_query_row_pitch(sg_pixel_format fmt, int width, int row_align_bytes);
             int sg_query_surface_pitch(sg_pixel_format fmt, int width, int height, int row_align_bytes);
 
         Width and height are generally in number pixels, but note that 'row' has different meaning
@@ -445,10 +444,8 @@
         This is why calling sg_query_surface_pitch() for a compressed pixel format and height
         N, N+1, N+2, ... may return the same result.
 
-        The row_align_bytes parameter is for added flexibility. For image data that goes into
-        the sg_make_image() or sg_update_image() this should generally be 1, because these
-        functions take tightly packed image data as input no matter what alignment restrictions
-        exist in the backend 3D APIs.
+        The row_align_bytes parameter is for added flexibility. For tightly packed image
+        this should generally be 1, otherwise the row pitch in bytes.
 
     ON INITIALIZATION:
     ==================
@@ -464,8 +461,8 @@
                 - the max overall size of uniform data that can be
                   updated per frame, including a worst-case alignment
                   per uniform update (this worst-case alignment is 256 bytes)
-                - the max size of all dynamic resource updates (sg_update_buffer,
-                  sg_append_buffer and sg_update_image) per frame
+                - the max size of all transient resource updates
+                  (sg_write_buffer/image_transient per frame
                 - the max number of compute-dispatch calls in a compute pass
             Not all of those limit values are used by all backends, but it is
             good practice to provide them none-the-less.
@@ -809,7 +806,7 @@
     storage images by running compute shader code on
     the GPU. Updating storage resources with a compute shader will almost always
     be more efficient than computing the same data on the CPU and then uploading
-    it via `sg_update_buffer()` or `sg_update_image()`.
+    it via `sg_write_buffer/image_transient()`.
 
     NOTE: compute passes are only supported on the following platforms and
     backends:
@@ -1462,6 +1459,230 @@
         data, e.g. it's not possible to transition a resource back from
         'valid' to 'unsealed' resource state.
 
+    ON COPYING DATA BETWEEN RESOURCES
+    =================================
+    NOTE: all `sg_copy_*` functions must be called outside passes!
+
+    To copy data between buffers, call `sg_copy_buffer_to_buffer()`.
+
+        ```c
+        sg_copy_buffer_to_buffer(&(sg_copy_buffer_to_buffer_desc){
+            .src = {
+                .buffer = src_buffer,
+                .offset = src_offset_in_bytes,
+            },
+            .dst = {
+                .buffer = dst_buffer,
+                .offset = dst_offset_in_bytes,
+            },
+            .size = copy_size_in_bytes,
+        });
+        ```
+
+    The source buffer must have been created with `.usage.copy_src = true`,
+    and the destination buffer with `.usage.copy_dst = true`:
+
+        ```c
+        sg_buffer src_buf = sg_make_buffer(&(sg_buffer_desc){
+            .usage = {
+                .vertex_buffer = true,
+                .copy_src = true,
+            },
+            .data = { ... },
+        });
+
+        sg_buffer dst_buf = sg_make_buffer(&(sg_buffer_desc){
+            .usage = {
+                .vertex_buffer = true,
+                .copy_dst = true,
+            },
+            .size = ...,
+        });
+        ```
+
+    Likewise to copy data from a buffer into an image, call `sg_copy_buffer_to_image`:
+
+        ```c
+        sg_copy_buffer_to_image(&(sg_copy_buffer_to_image_desc){
+            // source buffer and image data layout
+            .src = {
+                .buffer = src_buf,
+                .offset = offset_in_bytes,
+                .bytes_per_row = ...,
+                .bytes_per_slice = ...,
+            },
+            // destination image, miplevel and location
+            .dst = {
+                .image = dst_img,
+                .mip_level = ...,
+                .x = ...,
+                .y = ...,
+                .slice = ...,
+            },
+            // size of region to copy in pixels
+            .size = {
+                .width = ...,
+                .height = ...,
+                .num_slices = ...,
+            },
+        });
+        ```
+
+    For detailed information on the parameter structs `sg_copy_buffer_to_buffer_desc` and
+    `sg_copy_buffer_to_image_desc` (especially how default values are populated),
+    see the struct documentation headers.
+
+    Copying between resources comes with a lot of caveats caused by backend 3D API
+    restrictions (alignments, valid resource types, etc...). These detailed
+    requirements are listed in the struct documentation below, but for portable
+    code you'll at least need to be aware of the following 'dynamic' restrictions
+    that only trigger a validation check on certain backends:
+
+    - D3D11 does not support copying from D3D buffers into textures, this means
+      that sg_copy_buffer_to_image() is restricted to staging buffers as source
+      (created with .usage.staging_buffer) - e.g. on the D3D11 backend,
+      sg_copy_buffer_to_image() is *only* useful for uploading CPU-side data into
+      images. To check for this restriction at runtime, look at the feature flag
+      `sg_features.copy_buffer_to_image_relaxed_buffer_type`.  When this is true,
+      sg_copy_buffer_to_image() supports copying from regular non-staging buffer
+      types, when false, only `.usage.staging_buffer` buffers are supported.
+    - WebGPU requires `sg_copy_buffer_to_image_desc.src.bytes_per_row` to be
+      a multiple-of-256 when copying from a non-staging buffer (e.g. regular
+      GPU buffers like storage buffers). To check for this restriction at runtime,
+      look at the feature flag `sg_features.copy_buffer_to_image_relaxed_bytes_per_row`.
+      When true, the multiple-of-256 bytes restriction does not apply for source
+      buffers of any type. When false, the restriction applies for non-staging
+      buffers.
+    - WebGL2 has a restriction that a copy into a buffer with `.usage.index_buffer`
+      can only happen from a compatible source buffer which also must contain
+      index data (e.g. the source buffer must have been created with either
+      `.usage.index_buffer` or the special `.usage.staging_index_buffer`).
+      This restriction is gated by the common feature flag
+      `sg_features.separate_buffer_types` which also prevents 'multi-usage'
+      buffers (like combined vertex- and index-buffers).
+    - Also on WebGL2 and for the same reason, attempting to copy from an
+      index buffer into an image via `sg_copy_buffer_to_image` is prohibited
+    - On the Apple GL/GLES3 backends, when calling `sg_copy_buffer_to_image()`
+      from a non-staging buffer, the source buffer offset is ignored because
+      of a GL driver bug (which is unlikely to be fixed because
+      GL on macOS is long deprecated), sokol_gfx.h will log a one-time message
+      when the bug would be triggered. For copying from staging buffers, the
+      offset works because of a special workaround in the sokol-gfx GL backend
+      (staging buffers are actually heap memory allocations).
+
+
+    ON UPLOADING PERSISTENT DATA INTO RESOURCES
+    ===========================================
+    To upload CPU-side data into buffers and images (for instance to manage
+    a dynamic texture atlas), first write the data into a 'staging buffer'
+    with a `sg_write_buffer_transient()` call, and then copy the data
+    into the destination resource via `sg_copy_buffer_to_buffer()` or
+    `sg_copy_buffer_to_image()`.
+
+    Create the staging buffer with the usage flags `.staging_buffer`, `.write_transient`
+    and `.copy_src`, this is the same no matter if the destination is a buffer
+    or image:
+
+        ```c
+        sg_buffer staging_buf = sg_make_buffer(&(sg_buffer_desc){
+            .usage = {
+                .staging_buffer = true,
+                .write_transient = true,
+                .copy_src = true,
+            },
+            .size = ...,
+        });
+        ```
+    The destination resource must be created with the additional usage flag
+    `.copy_dst`, e.g. for a destination buffer used as vertex buffer:
+
+        ```c
+        sg_buffer dst_buf = sg_make_buffer(&(sg_buffer_desc){
+            .usage = {
+                .vertex_buffer = true,
+                .copy_dst = true,
+            },
+            .size = ...,
+        });
+        ```
+
+    ...now first write the data into the staging buffer via a regular
+    sg_write_buffer_transient() call:
+
+        ```c
+        sg_write_buffer_transient(&(sg_write_buffer_desc){
+            .src.data = { .ptr = ..., .size = ... },
+            .dst.buffer = staging_buf,
+        });
+        ```
+
+    You can do multiple sg_write_buffer_transient() calls to the same
+    buffer in a frame, but *only* until the first `sg_copy_*` call
+    in the same frame using this buffer as source.
+
+    Next, *outside* a pass, call sg_copy_buffer_to_buffer to copy the
+    data from the transient staging buffer into the 'persistent' destination
+    buffer:
+
+        ```c
+        sg_copy_buffer_to_buffer(&(sg_copy_buffer_to_buffer_desc){
+            .src = {
+                .buffer = staging_buf,
+                .offset = ...,
+            },
+            .dst = {
+                .buffer = dst_buf,
+                .offset = ...,
+            },
+            .size = ...,
+        });
+        ```
+
+    For images the process is similar: the destination image must be created
+    with `usage.copy_dst` and no initial data:
+
+        ```c
+        sg_image dst_img = sg_make_image(&(sg_image_desc){
+            .usage = {
+                .copy_dst = true,
+            },
+            .width = ...,
+            .height = ...,
+            .pixel_format = ...,
+        });
+        ```
+
+    ...then copy a pixel region from the source buffer into the destination
+    image (note that you probably want to provide explicit bytes_per_row and
+    bytes_per_slice values for the source data instead of relying on sokol-gfx
+    filling in the defaults because the default values assume that the entire
+    mip level is copied):
+
+        ```c
+        sg_copy_buffer_to_image(&(sg_copy_buffer_to_image_desc){
+            // source buffer and image data layout
+            .src = {
+                .buffer = staging_buf,
+                .offset = offset_in_bytes,
+                .bytes_per_row = ...,
+                .bytes_per_slice = ...,
+            },
+            // destination image, miplevel and location
+            .dst = {
+                .image = dst_img,
+                .mip_level = ...,
+                .x = ...,
+                .y = ...,
+                .slice = ...,
+            },
+            // size of region to copy in pixels
+            .size = {
+                .width = ...,
+                .height = ...,
+                .num_slices = ...,
+            },
+        });
+        ```
 
     ON STORAGE BUFFERS
     ==================
@@ -2209,12 +2430,8 @@ sg_write_buffer_unsealed :: (desc: *sg_write_buffer_desc) -> void #foreign sokol
 sg_write_image_unsealed :: (desc: *sg_write_image_desc) -> void #foreign sokol_gfx_clib;
 sg_seal_buffer :: (buf: sg_buffer) -> void #foreign sokol_gfx_clib;
 sg_seal_image :: (img: sg_image) -> void #foreign sokol_gfx_clib;
-// update functions (will be deprecated by new resource update functions)
-sg_update_buffer :: (buf: sg_buffer, data: *sg_range) -> void #foreign sokol_gfx_clib;
-sg_update_image :: (img: sg_image, data: *sg_image_data) -> void #foreign sokol_gfx_clib;
-sg_append_buffer :: (buf: sg_buffer, data: *sg_range) -> s32 #foreign sokol_gfx_clib;
-sg_query_buffer_overflow :: (buf: sg_buffer) -> bool #foreign sokol_gfx_clib;
-sg_query_buffer_will_overflow :: (buf: sg_buffer, size: u64) -> bool #foreign sokol_gfx_clib;
+sg_copy_buffer_to_buffer :: (desc: *sg_copy_buffer_to_buffer_desc) -> void #foreign sokol_gfx_clib;
+sg_copy_buffer_to_image :: (desc: *sg_copy_buffer_to_image_desc) -> void #foreign sokol_gfx_clib;
 // getting information
 sg_query_desc :: () -> sg_desc #foreign sokol_gfx_clib;
 sg_query_backend :: () -> sg_backend #foreign sokol_gfx_clib;
@@ -2223,6 +2440,7 @@ sg_query_limits :: () -> sg_limits #foreign sokol_gfx_clib;
 sg_query_pixelformat :: (fmt: sg_pixel_format) -> sg_pixelformat_info #foreign sokol_gfx_clib;
 sg_query_row_pitch :: (fmt: sg_pixel_format, width: s32, row_align_bytes: s32) -> s32 #foreign sokol_gfx_clib;
 sg_query_surface_pitch :: (fmt: sg_pixel_format, width: s32, height: s32, row_align_bytes: s32) -> s32 #foreign sokol_gfx_clib;
+sg_query_pass_state :: () -> sg_pass_state #foreign sokol_gfx_clib;
 // get current state of a resource (INITIAL, ALLOC, VALID, FAILED, INVALID)
 sg_query_buffer_state :: (buf: sg_buffer) -> sg_resource_state #foreign sokol_gfx_clib;
 sg_query_image_state :: (img: sg_image) -> sg_resource_state #foreign sokol_gfx_clib;
@@ -2577,6 +2795,8 @@ sg_features :: struct {
     draw_base_instance : bool;
     dual_source_blending : bool;
     vertexformat_int10_n2 : bool;
+    copy_buffer_to_image_relaxed_buffer_type : bool;
+    copy_buffer_to_image_relaxed_bytes_per_row : bool;
     gl_texture_views : bool;
 }
 
@@ -3234,6 +3454,17 @@ sg_pass :: struct {
     _ : u32;
 }
 
+/*
+    sg_pass_state
+
+    Result of sg_query_pass_state().
+*/
+sg_pass_state :: enum u32 {
+    NONE;
+    RENDER;
+    COMPUTE;
+}
+
 sg_bindings :: struct {
     _ : u32;
     vertex_buffers : [8]sg_buffer;
@@ -3249,10 +3480,12 @@ sg_buffer_usage :: struct {
     vertex_buffer : bool;
     index_buffer : bool;
     storage_buffer : bool;
-    immutable : bool;
+    staging_buffer : bool;
+    staging_index_buffer : bool;
     write_unsealed : bool;
     write_transient : bool;
-    dynamic_update : bool;
+    copy_src : bool;
+    copy_dst : bool;
 }
 
 sg_buffer_desc :: struct {
@@ -3261,8 +3494,8 @@ sg_buffer_desc :: struct {
     usage : sg_buffer_usage;
     data : sg_range;
     label : *u8;
-    gl_buffers : [2]u32;
-    mtl_buffers : [2]*void;
+    gl_buffer : u32;
+    mtl_buffer : *void;
     d3d11_buffer : *void;
     wgpu_buffer : *void;
     _ : u32;
@@ -3273,10 +3506,11 @@ sg_image_usage :: struct {
     color_attachment : bool;
     resolve_attachment : bool;
     depth_stencil_attachment : bool;
-    immutable : bool;
     write_unsealed : bool;
     write_transient : bool;
-    dynamic_update : bool;
+    copy_src : bool;
+    copy_dst : bool;
+    immutable : bool;
 }
 
 /*
@@ -3330,6 +3564,13 @@ sg_buffer_location :: struct {
     offset : u64;
 }
 
+sg_buffer_image_location :: struct {
+    buffer : sg_buffer;
+    offset : u64;
+    bytes_per_row : s32;
+    bytes_per_slice : s32;
+}
+
 sg_write_buffer_source :: struct {
     data : sg_range;
     offset : u64;
@@ -3339,6 +3580,18 @@ sg_write_buffer_desc :: struct {
     src : sg_write_buffer_source;
     dst : sg_buffer_location;
     size : u64;
+}
+
+sg_copy_buffer_to_buffer_desc :: struct {
+    src : sg_buffer_location;
+    dst : sg_buffer_location;
+    size : u64;
+}
+
+sg_copy_buffer_to_image_desc :: struct {
+    src : sg_buffer_image_location;
+    dst : sg_image_location;
+    size : sg_image_extent;
 }
 
 sg_image_desc :: struct {
@@ -3353,9 +3606,9 @@ sg_image_desc :: struct {
     sample_count : s32;
     data : sg_image_data;
     label : *u8;
-    gl_textures : [2]u32;
+    gl_texture : u32;
     gl_texture_target : u32;
-    mtl_textures : [2]*void;
+    mtl_texture : *void;
     d3d11_texture : *void;
     wgpu_texture : *void;
     _ : u32;
@@ -3776,15 +4029,14 @@ sg_trace_hooks :: struct {
     destroy_shader : (a0: sg_shader, a1: *void) #c_call;
     destroy_pipeline : (a0: sg_pipeline, a1: *void) #c_call;
     destroy_view : (a0: sg_view, a1: *void) #c_call;
-    update_buffer : (a0: sg_buffer, a1: *sg_range, a2: *void) #c_call;
-    update_image : (a0: sg_image, a1: *sg_image_data, a2: *void) #c_call;
-    append_buffer : (a0: sg_buffer, a1: *sg_range, a2: s32, a3: *void) #c_call;
     write_buffer_transient : (a0: *sg_write_buffer_desc, a1: *void) #c_call;
     write_image_transient : (a0: *sg_write_image_desc, a1: *void) #c_call;
     write_buffer_unsealed : (a0: *sg_write_buffer_desc, a1: *void) #c_call;
     write_image_unsealed : (a0: *sg_write_image_desc, a1: *void) #c_call;
     seal_buffer : (a0: sg_buffer, a1: *void) #c_call;
     seal_image : (a0: sg_image, a1: *void) #c_call;
+    copy_buffer_to_buffer : (a0: *sg_copy_buffer_to_buffer_desc, a1: *void) #c_call;
+    copy_buffer_to_image : (a0: *sg_copy_buffer_to_image_desc, a1: *void) #c_call;
     begin_pass : (a0: *sg_pass, a1: *void) #c_call;
     apply_viewport : (a0: s32, a1: s32, a2: s32, a3: s32, a4: bool, a5: *void) #c_call;
     apply_scissor_rect : (a0: s32, a1: s32, a2: s32, a3: s32, a4: bool, a5: *void) #c_call;
@@ -3840,17 +4092,12 @@ sg_buffer_info :: struct {
     slot : sg_slot_info;
     num_slots : s32;
     active_slot : s32;
-    update_frame_index : u32;
-    append_frame_index : u32;
-    append_pos : s32;
-    append_overflow : bool;
 }
 
 sg_image_info :: struct {
     slot : sg_slot_info;
     num_slots : s32;
     active_slot : s32;
-    upd_frame_index : u32;
 }
 
 sg_sampler_info :: struct {
@@ -4067,19 +4314,17 @@ sg_frame_stats :: struct {
     num_draw : u32;
     num_draw_ex : u32;
     num_dispatch : u32;
-    num_update_buffer : u32;
-    num_append_buffer : u32;
-    num_update_image : u32;
     num_write_buffer_transient : u32;
     num_write_image_transient : u32;
     num_write_buffer_unsealed : u32;
     num_write_image_unsealed : u32;
     num_seal_buffer : u32;
     num_seal_image : u32;
+    num_copy_buffer_to_buffer : u32;
+    num_copy_buffer_to_image : u32;
     size_apply_uniforms : u32;
-    size_update_buffer : u32;
-    size_append_buffer : u32;
-    size_update_image : u32;
+    size_copy_buffer_to_buffer : u32;
+    size_copy_buffer_to_image : u32;
     buffers : sg_frame_resource_stats;
     images : sg_frame_resource_stats;
     samplers : sg_frame_resource_stats;
@@ -4118,6 +4363,7 @@ sg_log_item :: enum u32 {
     GL_FRAMEBUFFER_STATUS_UNSUPPORTED;
     GL_FRAMEBUFFER_STATUS_INCOMPLETE_MULTISAMPLE;
     GL_FRAMEBUFFER_STATUS_UNKNOWN;
+    GL_APPLE_PIXEL_UNPACK_OFFSET_BUG;
     D3D11_FEATURE_LEVEL_0_DETECTED;
     D3D11_CREATE_BUFFER_FAILED;
     D3D11_CREATE_BUFFER_SRV_FAILED;
@@ -4149,9 +4395,6 @@ sg_log_item :: enum u32 {
     D3D11_CREATE_RTV_FAILED;
     D3D11_CREATE_DSV_FAILED;
     D3D11_CREATE_UAV_FAILED;
-    D3D11_MAP_FOR_UPDATE_BUFFER_FAILED;
-    D3D11_MAP_FOR_APPEND_BUFFER_FAILED;
-    D3D11_MAP_FOR_UPDATE_IMAGE_FAILED;
     D3D11_MAP_FOR_WRITE_BUFFER_TRANSIENT_FAILED;
     METAL_CREATE_BUFFER_FAILED;
     METAL_TEXTURE_FORMAT_NOT_SUPPORTED;
@@ -4265,11 +4508,23 @@ sg_log_item :: enum u32 {
     BEGINPASS_ATTACHMENTS_ALIVE;
     DRAW_WITHOUT_BINDINGS;
     WRITE_BUFFER_TRANSIENT_BUFFER_ALIVE;
+    WRITE_BUFFER_TRANSIENT_BUFFER_VALID;
     WRITE_IMAGE_TRANSIENT_IMAGE_ALIVE;
+    WRITE_IMAGE_TRANSIENT_IMAGE_VALID;
     WRITE_BUFFER_UNSEALED_BUFFER_ALIVE;
+    WRITE_BUFFER_UNSEALED_BUFFER_UNSEALED;
     WRITE_IMAGE_UNSEALED_IMAGE_ALIVE;
+    WRITE_IMAGE_UNSEALED_IMAGE_UNSEALED;
     SEAL_BUFFER_ALIVE;
     SEAL_IMAGE_ALIVE;
+    COPY_BUFFER_TO_BUFFER_SRC_ALIVE;
+    COPY_BUFFER_TO_BUFFER_DST_ALIVE;
+    COPY_BUFFER_TO_BUFFER_SRC_VALID;
+    COPY_BUFFER_TO_BUFFER_DST_VALID;
+    COPY_BUFFER_TO_IMAGE_SRC_ALIVE;
+    COPY_BUFFER_TO_IMAGE_DST_ALIVE;
+    COPY_BUFFER_TO_IMAGE_SRC_VALID;
+    COPY_BUFFER_TO_IMAGE_DST_VALID;
     SHADERDESC_TOO_MANY_VERTEXSTAGE_TEXTURES;
     SHADERDESC_TOO_MANY_FRAGMENTSTAGE_TEXTURES;
     SHADERDESC_TOO_MANY_COMPUTESTAGE_TEXTURES;
@@ -4283,13 +4538,25 @@ sg_log_item :: enum u32 {
     SHADERDESC_TOO_MANY_FRAGMENTSTAGE_TEXTURESAMPLERPAIRS;
     SHADERDESC_TOO_MANY_COMPUTESTAGE_TEXTURESAMPLERPAIRS;
     VALIDATE_BUFFERDESC_CANARY;
-    VALIDATE_BUFFERDESC_IMMUTABLE_VS_WRITABLE;
-    VALIDATE_BUFFERDESC_UNSEALED_VS_IMMUTABLE;
-    VALIDATE_BUFFERDESC_SEPARATE_BUFFER_TYPES;
     VALIDATE_BUFFERDESC_EXPECT_NONZERO_SIZE;
+    VALIDATE_BUFFERDESC_STAGING_VS_VERTEXBUFFER;
+    VALIDATE_BUFFERDESC_STAGING_VS_INDEXBUFFER;
+    VALIDATE_BUFFERDESC_STAGING_VS_STORAGEBUFFER;
+    VALIDATE_BUFFERDESC_STAGING_VS_INJECTED;
+    VALIDATE_BUFFERDESC_STAGING_VS_COPYDST;
+    VALIDATE_BUFFERDESC_STAGING_VS_INITIALDATA;
+    VALIDATE_BUFFERDESC_STAGING_COPYSRC;
+    VALIDATE_BUFFERDESC_SEPARATE_BUFFER_TYPES;
+    VALIDATE_BUFFERDESC_WRITEUNSEALED_VS_WRITETRANSIENT;
+    VALIDATE_BUFFERDESC_WRITEUNSEALED_VS_COPYDST;
+    VALIDATE_BUFFERDESC_WRITEUNSEALED_VS_STAGING;
+    VALIDATE_BUFFERDESC_WRITEUNSEALED_VS_INITIALDATA;
+    VALIDATE_BUFFERDESC_WRITETRANSIENT_VS_COPYDST;
+    VALIDATE_BUFFERDESC_WRITETRANSIENT_VS_INITIALDATA;
+    VALIDATE_BUFFERDESC_WRITETRANSIENT_VS_INJECTED;
+    VALIDATE_BUFFERDESC_COPYDST_VS_INITIALDATA;
     VALIDATE_BUFFERDESC_EXPECT_MATCHING_DATA_SIZE;
     VALIDATE_BUFFERDESC_EXPECT_ZERO_DATA_SIZE;
-    VALIDATE_BUFFERDESC_EXPECT_NO_DATA;
     VALIDATE_BUFFERDESC_EXPECT_DATA;
     VALIDATE_BUFFERDESC_STORAGEBUFFER_SUPPORTED;
     VALIDATE_BUFFERDESC_STORAGEBUFFER_SIZE_MULTIPLE_4;
@@ -4297,10 +4564,11 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDATA_DATA_SIZE;
     VALIDATE_IMAGEDESC_CANARY;
     VALIDATE_IMAGEDESC_IMMUTABLE_VS_WRITABLE;
-    VALIDATE_IMAGEDESC_WRITE_UNSEALED_VS_IMMUTABLE;
-    VALIDATE_IMAGEDESC_WRITE_UNSEALED_VS_ATTACHMENT;
-    VALIDATE_IMAGEDESC_WRITE_TRANSIENT_VS_ATTACHMENT;
-    VALIDATE_IMAGEDESC_DYNAMIC_UPDATE_VS_ATTACHMENT;
+    VALIDATE_IMAGEDESC_WRITEUNSEALED_VS_IMMUTABLE;
+    VALIDATE_IMAGEDESC_WRITEUNSEALED_VS_ATTACHMENT;
+    VALIDATE_IMAGEDESC_WRITETRANSIENT_VS_ATTACHMENT;
+    VALIDATE_IMAGEDESC_WRITETRANSIENT_VS_INJECTED;
+    VALIDATE_IMAGEDESC_COPYDST_VS_ATTACHMENT;
     VALIDATE_IMAGEDESC_ATTACHMENT_COLOR_DEPTH_STENCIL;
     VALIDATE_IMAGEDESC_IMAGETYPE_2D_NUMSLICES;
     VALIDATE_IMAGEDESC_IMAGETYPE_CUBE_NUMSLICES;
@@ -4327,7 +4595,6 @@ sg_log_item :: enum u32 {
     VALIDATE_IMAGEDESC_STORAGEIMAGE_EXPECT_NO_MSAA;
     VALIDATE_IMAGEDESC_INJECTED_NO_DATA;
     VALIDATE_IMAGEDESC_WRITABLE_NO_DATA;
-    VALIDATE_IMAGEDESC_COMPRESSED_IMMUTABLE;
     VALIDATE_SAMPLERDESC_CANARY;
     VALIDATE_SAMPLERDESC_ANISTROPIC_REQUIRES_LINEAR_FILTERING;
     VALIDATE_SHADERDESC_CANARY;
@@ -4532,23 +4799,21 @@ sg_log_item :: enum u32 {
     VALIDATE_ABND_EXPECTED_VBUF;
     VALIDATE_ABND_VBUF_ALIVE;
     VALIDATE_ABND_VBUF_USAGE;
-    VALIDATE_ABND_VBUF_OVERFLOW;
     VALIDATE_ABND_EXPECTED_NO_IBUF;
     VALIDATE_ABND_EXPECTED_IBUF;
     VALIDATE_ABND_IBUF_ALIVE;
     VALIDATE_ABND_IBUF_USAGE;
-    VALIDATE_ABND_IBUF_OVERFLOW;
     VALIDATE_ABND_EXPECTED_VIEW_BINDING;
     VALIDATE_ABND_VIEW_ALIVE;
     VALIDATE_ABND_EXPECT_TEXVIEW;
     VALIDATE_ABND_EXPECT_SBVIEW;
+    VALIDATE_ABND_SBVIEW_READWRITE_VS_WRITETRANSIENT;
     VALIDATE_ABND_EXPECT_SIMGVIEW;
     VALIDATE_ABND_TEXVIEW_IMAGETYPE_MISMATCH;
     VALIDATE_ABND_TEXVIEW_EXPECTED_MULTISAMPLED_IMAGE;
     VALIDATE_ABND_TEXVIEW_EXPECTED_NON_MULTISAMPLED_IMAGE;
     VALIDATE_ABND_TEXVIEW_EXPECTED_FILTERABLE_IMAGE;
     VALIDATE_ABND_TEXVIEW_EXPECTED_DEPTH_IMAGE;
-    VALIDATE_ABND_SBVIEW_READWRITE_IMMUTABLE;
     VALIDATE_ABND_SIMGVIEW_COMPUTE_PASS_EXPECTED;
     VALIDATE_ABND_SIMGVIEW_IMAGETYPE_MISMATCH;
     VALIDATE_ABND_SIMGVIEW_ACCESSFORMAT;
@@ -4593,19 +4858,10 @@ sg_log_item :: enum u32 {
     VALIDATE_DISPATCH_REQUIRED_BINDINGS_OR_UNIFORMS_MISSING;
     VALIDATE_DISPATCH_WRITE_BUFFER_TRANSIENT_MISSING;
     VALIDATE_DISPATCH_WRITE_IMAGE_TRANSIENT_MISSING;
-    VALIDATE_UPDATEBUF_USAGE;
-    VALIDATE_UPDATEBUF_SIZE;
-    VALIDATE_UPDATEBUF_ONCE;
-    VALIDATE_UPDATEBUF_APPEND;
-    VALIDATE_APPENDBUF_USAGE;
-    VALIDATE_APPENDBUF_SIZE;
-    VALIDATE_APPENDBUF_UPDATE;
-    VALIDATE_UPDIMG_USAGE;
-    VALIDATE_UPDIMG_ONCE;
     VALIDATE_WRITEBUFFERUNSEALED_USAGE;
-    VALIDATE_WRITEBUFFERUNSEALED_RESOURCESTATE;
     VALIDATE_WRITEBUFFERTRANSIENT_USAGE;
     VALIDATE_WRITEBUFFERTRANSIENT_WRITE_BEFORE_BIND;
+    VALIDATE_WRITEBUFFERTRANSIENT_WRITE_BEFORE_COPY;
     VALIDATE_WRITEBUFFERTRANSIENT_DST_OFFSET_ALIGNMENT;
     VALIDATE_WRITEBUFFER_SRC_DATA_POINTER;
     VALIDATE_WRITEBUFFER_SRC_DATA_SIZE;
@@ -4613,13 +4869,14 @@ sg_log_item :: enum u32 {
     VALIDATE_WRITEBUFFER_WRITE_OVERFLOW;
     VALIDATE_WRITEBUFFER_READ_OVERFLOW;
     VALIDATE_WRITEIMAGEUNSEALED_USAGE;
-    VALIDATE_WRITEIMAGEUNSEALED_RESOURCESTATE;
     VALIDATE_WRITEIMAGETRANSIENT_USAGE;
     VALIDATE_WRITEIMAGETRANSIENT_WRITE_BEFORE_BIND;
     VALIDATE_WRITEIMAGE_SRC_DATA_POINTER;
     VALIDATE_WRITEIMAGE_SRC_DATA_SIZE;
     VALIDATE_WRITEIMAGE_BYTESPERROW;
     VALIDATE_WRITEIMAGE_BYTESPERSLICE;
+    VALIDATE_WRITEIMAGE_BYTESPERROW_TOO_SMALL;
+    VALIDATE_WRITEIMAGE_BYTESPERSLICE_TOO_SMALL;
     VALIDATE_WRITEIMAGE_MIPLEVEL;
     VALIDATE_WRITEIMAGE_WIDTH;
     VALIDATE_WRITEIMAGE_HEIGHT;
@@ -4631,8 +4888,49 @@ sg_log_item :: enum u32 {
     VALIDATE_WRITEIMAGE_WRITE_WIDTH_OVERFLOW;
     VALIDATE_WRITEIMAGE_WRITE_HEIGHT_OVERFLOW;
     VALIDATE_WRITEIMAGE_WRITE_NUMSLICES_OVERFLOW;
+    VALIDATE_WRITEIMAGE_DST_X_ALIGNMENT;
+    VALIDATE_WRITEIMAGE_DST_Y_ALIGNMENT;
+    VALIDATE_WRITEIMAGE_WIDTH_MULTIPLE;
+    VALIDATE_WRITEIMAGE_HEIGHT_MULTIPLE;
     VALIDATE_SEALBUFFER_RESOURCESTATE;
     VALIDATE_SEALIMAGE_RESOURCESTATE;
+    VALIDATE_COPYBUFFERTOBUFFER_INSIDE_PASS;
+    VALIDATE_COPYBUFFERTOBUFFER_SRC_VS_DST_BUFFER;
+    VALIDATE_COPYBUFFERTOBUFFER_COPY_SRC;
+    VALIDATE_COPYBUFFERTOBUFFER_COPY_DST;
+    VALIDATE_COPYBUFFERTOBUFFER_ZERO_SIZE;
+    VALIDATE_COPYBUFFERTOBUFFER_SRC_OFFSET_ALIGNMENT;
+    VALIDATE_COPYBUFFERTOBUFFER_DST_OFFSET_ALIGNMENT;
+    VALIDATE_COPYBUFFERTOBUFFER_SRC_OVERFLOW;
+    VALIDATE_COPYBUFFERTOBUFFER_DST_OVERFLOW;
+    VALIDATE_COPYBUFFERTOBUFFER_WEBGL2_INDEX_BUFFER;
+    VALIDATE_COPYBUFFERTOIMAGE_WEBGL2_INDEX_BUFFER;
+    VALIDATE_COPYBUFFERTOIMAGE_BYTESPERROW_TOO_SMALL;
+    VALIDATE_COPYBUFFERTOIMAGE_BYTESPERSLICE_TOO_SMALL;
+    VALIDATE_COPYBUFFERTOIMAGE_SRC_STAGING_INDEX_BUFFER;
+    VALIDATE_COPYBUFFERTOIMAGE_SRC_STAGING_BUFFER;
+    VALIDATE_COPYBUFFERTOIMAGE_INSIDE_PASS;
+    VALIDATE_COPYBUFFERTOIMAGE_COPY_SRC;
+    VALIDATE_COPYBUFFERTOIMAGE_COPY_DST;
+    VALIDATE_COPYBUFFERTOIMAGE_SRC_OFFSET_ALIGNMENT;
+    VALIDATE_COPYBUFFERTOIMAGE_BYTESPERROW_MULTIPLE_BLOCKSIZE;
+    VALIDATE_COPYBUFFERTOIMAGE_BYTESPERROW_MULTIPLE_256;
+    VALIDATE_COPYBUFFERTOIMAGE_BYTESPERSLICE;
+    VALIDATE_COPYBUFFERTOIMAGE_SRC_OVERFLOW;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_MIPLEVEL;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_WIDTH;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_HEIGHT;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_WIDTH_MULTIPLE;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_HEIGHT_MULTIPLE;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_NUMSLICES;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_X_RANGE;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_Y_RANGE;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_X_ALIGNMENT;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_Y_ALIGNMENT;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_SLICE_RANGE;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_WIDTH_OVERFLOW;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_HEIGHT_OVERFLOW;
+    VALIDATE_COPYBUFFERTOIMAGE_DST_NUMSLICES_OVERFLOW;
     VALIDATION_FAILED;
 }
 
