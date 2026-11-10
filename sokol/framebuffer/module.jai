@@ -457,7 +457,7 @@ sfb_render_desc :: struct {
     use_nearest_filter : bool;
     pip : sg_pipeline;
     views : [32]sg_view;
-    samplers : [12]sg_sampler;
+    samplers : [14]sg_sampler;
     uniforms : [8]sg_range;
 }
 
