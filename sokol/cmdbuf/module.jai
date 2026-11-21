@@ -126,7 +126,9 @@
         scb_apply_uniforms(cb, ub_slot, &(sg_range){ ... });
         scb_draw(cb, base_element, num_elements, num_instances);
         scb_draw_ex(cb, base_element, num_elements, num_instances, base_vertex, base_instance);
+        scb_draw_indirect(cb, buf, offset);
         scb_dispatch(cb, num_groups_x, num_groups_y, num_groups_z);
+        scb_dispatch_indirect(cb, buf, offset);
 
       Uniform data will be copied into the command buffer, and with the
       required alignment.
@@ -351,8 +353,12 @@ scb_apply_uniforms :: (cb: scb_cmdbuf, ub_slot: s32, data: *sg_range) -> void #f
 scb_draw :: (cb: scb_cmdbuf, base_element: s32, num_elements: s32, num_instances: s32) -> void #foreign sokol_cmdbuf_clib;
 // record draw-ex command
 scb_draw_ex :: (cb: scb_cmdbuf, base_element: s32, num_elements: s32, num_instances: s32, base_vertex: s32, base_instance: s32) -> void #foreign sokol_cmdbuf_clib;
+// record draw-indirect command
+scb_draw_indirect :: (cb: scb_cmdbuf, buf: sg_buffer, offset: s32) -> void #foreign sokol_cmdbuf_clib;
 // record dispatch command
 scb_dispatch :: (cb: scb_cmdbuf, num_groups_x: s32, num_groups_y: s32, num_groups_z: s32) -> void #foreign sokol_cmdbuf_clib;
+// record dispatch-indirect command
+scb_dispatch_indirect :: (cb: scb_cmdbuf, buf: sg_buffer, offset: s32) -> void #foreign sokol_cmdbuf_clib;
 // query command buffer resource state (valid, failed, invalid)
 scb_query_cmdbuf_state :: (cb: scb_cmdbuf) -> scb_resource_state #foreign sokol_cmdbuf_clib;
 // query current command buffer properties
